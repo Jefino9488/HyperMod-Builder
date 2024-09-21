@@ -49,11 +49,11 @@ const App = () => {
   };
 
   const handleRedirect = () => {
-    window.open('https://github.com/Jefino9488/XAGA-builder/releases', '_blank');
+    window.open('https://github.com/Jefino9488/HyperMod-Builder/releases', '_blank');
   };
 
   const handleRedirectBuild = () => {
-    window.open(`https://github.com/Jefino9488/XAGA-builder/actions/workflows/${HYPER_BUILDER}`, '_blank');
+    window.open(`https://github.com/Jefino9488/HyperMod-Builder/actions/workflows/${HYPER_BUILDER}`, '_blank');
   };
 
   return (

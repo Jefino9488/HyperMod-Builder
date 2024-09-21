@@ -1,0 +1,130 @@
+name: HyperMod_Fastboot
+
+on:
+  workflow_dispatch:
+    inputs:
+      URL:
+        description: 'Official recovery ROM'
+        required: true
+        type: string
+      region:
+        description: 'Select region'
+        required: true
+        type: choice
+        options:
+          - 'CN'
+          - 'Global'
+      core:
+        description: 'Apply core patch'
+        required: true
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+        default: 'false'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: maximizeYourBuildEnvironment
+        uses: easimon/maximize-build-space@master
+        with:
+          swap-size-mb: 8192
+          root-reserve-mb: 4096
+          temp-reserve-mb: 4096
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+
+      - name: CheckOutWarehouseFiles
+        uses: actions/checkout@main
+
+      - name: Set Git user info
+        run: |
+          git config user.email "jefinojacob9488@gmail.com"
+          git config user.name "Jefino9488"
+        shell: bash
+
+      - name: prepareTheRequiredEnvironment
+        run: |
+          # Extract device name from the URL
+          URL="${{ github.event.inputs.URL }}"
+          device_name=$(basename "$URL" | cut -d'_' -f2 | cut -d'.' -f2)
+          echo "version=$(echo ${{ github.event.inputs.URL }} | cut -d'/' -f4)" >> $GITHUB_ENV
+          echo "device=$device_name" >> $GITHUB_ENV
+          echo "Device name: $device_name"
+
+          echo "version=$(echo ${{ github.event.inputs.URL }} | cut -d"/" -f4)" >> $GITHUB_ENV
+          sudo apt-get install python3 aria2 p7zip-full zstd dos2unix
+
+      - name: Download & Unpack
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/unpack.sh ${{ github.event.inputs.URL }} ${{ env.device }} $GITHUB_WORKSPACE
+
+      - name: Modify Product
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/product.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.region }}
+
+#      - name: Modify System
+#        run: |
+#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system.sh ${{ env.device }} $GITHUB_WORKSPACE
+
+      - name: Modify System_ext
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system_ext.sh ${{ env.device }} $GITHUB_WORKSPACE
+
+      - name: Modify Vendor
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/vendor.sh ${{ env.device }} $GITHUB_WORKSPACE
+
+      - name: Clone smali repository
+        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
+
+      - name: Build smali and baksmali
+        run: |
+          ls
+          cd smali
+          ./gradlew build
+
+      - name: Patch Framework
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
+
+      - name: Patch Boot
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patchBOOT.sh ${{ env.device }} $GITHUB_WORKSPACE
+
+      - name: Repack
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/repack.sh ${{ env.device }} $GITHUB_WORKSPACE
+
+      - name: release split
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
+          cp "$GITHUB_WORKSPACE/tools/merge.bat" "$GITHUB_WORKSPACE/GithubRelease/"
+          split -b 1536M "${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip" "$GITHUB_WORKSPACE/GithubRelease/${{ env.version }}_fastboot-split.zip"
+          ls "$GITHUB_WORKSPACE/GithubRelease"
+          cd "$GITHUB_WORKSPACE/GithubRelease"
+
+      - name: Upload ROM
+        id: Fastboot-Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.device }}_fastboot
+          path: ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip
+          compression-level: 0
+          retention-days: 1
+
+      - name: Upload Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ${{ github.workspace }}/GithubRelease/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ env.device }}_HyperMod
+          tag: ${{ env.version }}
+          allowUpdates: true
+          makeLatest: true

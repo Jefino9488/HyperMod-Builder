@@ -27,7 +27,7 @@ const App = () => {
         owner: REPO_OWNER,
         repo: REPO_NAME,
         workflow_id: HYPER_BUILDER,
-        ref: 'builder',
+        ref: 'master',
         inputs: inputs,
       });
 

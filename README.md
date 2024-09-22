@@ -1,5 +1,6 @@
 # HyperMod-`builder`
 
+[![HyperMod_Fastboot](https://github.com/Jefino9488/HyperMod-Builder/actions/workflows/Hyper_Builder.yml/badge.svg)](https://github.com/Jefino9488/HyperMod-Builder/actions/workflows/Hyper_Builder.yml)
 
 ⚠️ **Warning: Repository Under Development** ⚠️
 

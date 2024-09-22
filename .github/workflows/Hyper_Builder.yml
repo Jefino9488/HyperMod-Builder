@@ -110,7 +110,7 @@ jobs:
       - name: release split & info
         run: |
           mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
-          unzip "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}_fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
+          unzip -j "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}_fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
           cd "$GITHUB_WORKSPACE"
           touch changelog.md
           echo -e "## Build INFO\n\n- Device: ${{ env.device }}\n- Version: ${{ env.version }}\n- Region: ${{ github.event.inputs.region }}\n- Core Patch: ${{ github.event.inputs.core }}" >> changelog.md

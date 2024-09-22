@@ -102,13 +102,15 @@ jobs:
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/repack.sh ${{ env.device }} $GITHUB_WORKSPACE
 
-      - name: release split
+      - name: release split & info
         run: |
           mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
           cp "$GITHUB_WORKSPACE/tools/merge.bat" "$GITHUB_WORKSPACE/GithubRelease/"
           split -b 1536M "${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip" "$GITHUB_WORKSPACE/GithubRelease/${{ env.version }}_fastboot-split.zip"
-          ls "$GITHUB_WORKSPACE/GithubRelease"
-          cd "$GITHUB_WORKSPACE/GithubRelease"
+          cd "$GITHUB_WORKSPACE"
+          touch changelog.md
+          echo -e "## Build INFO\n\n- Device: ${{ env.device }}\n- Version: ${{ env.version }}\n- Region: ${{ github.event.inputs.region }}\n- Core Patch: ${{ github.event.inputs.core }}" >> changelog.md
+          echo -e "\n\n## Changelog\n\n- Initial Build" >> changelog.md
 
       - name: Upload ROM
         id: Fastboot-Upload
@@ -125,6 +127,7 @@ jobs:
           artifacts: ${{ github.workspace }}/GithubRelease/*
           token: ${{ secrets.GITHUB_TOKEN }}
           name: ${{ env.device }}_HyperMod
-          tag: ${{ env.version }}
+          tag: ${{ env.device }}_${{ env.version }}
+          bodyFile: ${{ github.workspace }}/changelog.md
           allowUpdates: true
           makeLatest: true

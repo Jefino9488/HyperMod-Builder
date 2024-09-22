@@ -104,13 +104,12 @@ jobs:
 
       - name: gofile upload
         run: |
-          mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}_fastboot.zip
+          sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}_fastboot.zip
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}_fastboot.zip $GITHUB_ENV
 
       - name: release split & info
         run: |
           mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
-          # extract boot.img, vendor_boot.img, magisk_boot.img from zip and move to GithubRelease
           unzip "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}_fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
           cd "$GITHUB_WORKSPACE"
           touch changelog.md

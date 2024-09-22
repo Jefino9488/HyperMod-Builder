@@ -44,7 +44,7 @@ const App = () => {
 
   const resetForm = () => {
     setUrl('');
-    setRegion('Global');
+    setRegion('CN');
     setCorePatch('false');
   };
 
@@ -78,7 +78,6 @@ const App = () => {
               required
           >
             <option value="CN">CN</option>
-            <option value="Global">Global</option>
           </select>
 
           <label htmlFor="core-select">Apply Core Patch:</label>

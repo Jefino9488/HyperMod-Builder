@@ -102,29 +102,21 @@ jobs:
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/repack.sh ${{ env.device }} $GITHUB_WORKSPACE
 
-      - name: test upload
+      - name: gofile upload
         run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip $GITHUB_ENV
+          mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}_fastboot.zip
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}_fastboot.zip $GITHUB_ENV
 
       - name: release split & info
         run: |
           mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
-          cp "$GITHUB_WORKSPACE/tools/merge.bat" "$GITHUB_WORKSPACE/GithubRelease/"
-          split -b 1536M "${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip" "$GITHUB_WORKSPACE/GithubRelease/${{ env.version }}_fastboot-split.zip"
+          # extract boot.img, vendor_boot.img, magisk_boot.img from zip and move to GithubRelease
+          unzip "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}_fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
           cd "$GITHUB_WORKSPACE"
           touch changelog.md
           echo -e "## Build INFO\n\n- Device: ${{ env.device }}\n- Version: ${{ env.version }}\n- Region: ${{ github.event.inputs.region }}\n- Core Patch: ${{ github.event.inputs.core }}" >> changelog.md
           echo -e "\n\n## Download Link\n\n- [Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})" >> changelog.md
           echo -e "\n\n## Changelog\n\n- Initial Build" >> changelog.md
-
-      - name: Upload ROM
-        id: Fastboot-Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.device }}_fastboot
-          path: ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip
-          compression-level: 0
-          retention-days: 1
 
       - name: Upload Release
         uses: ncipollo/release-action@v1

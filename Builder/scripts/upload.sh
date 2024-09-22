@@ -8,6 +8,7 @@ fi
 # Store the file path, preserving spaces
 # $1 is the first command-line argument
 FILE="$1"
+GITHUB_ENV="$2"
 
 # Query GoFile API to find the best server for upload
 SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')

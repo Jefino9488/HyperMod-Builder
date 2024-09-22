@@ -104,7 +104,7 @@ jobs:
 
       - name: test upload
         run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip 
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip $GITHUB_ENV
 
       - name: release split & info
         run: |
@@ -114,7 +114,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           touch changelog.md
           echo -e "## Build INFO\n\n- Device: ${{ env.device }}\n- Version: ${{ env.version }}\n- Region: ${{ github.event.inputs.region }}\n- Core Patch: ${{ github.event.inputs.core }}" >> changelog.md
-          echo -e "\n\n## Download Link\n\n- [Download Fastboot ZIP]($DOWNLOAD_LINK)" >> changelog.md
+          echo -e "\n\n## Download Link\n\n- [Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})" >> changelog.md
           echo -e "\n\n## Changelog\n\n- Initial Build" >> changelog.md
 
       - name: Upload ROM

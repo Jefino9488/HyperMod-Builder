@@ -104,13 +104,13 @@ jobs:
 
       - name: gofile upload
         run: |
-          sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}_fastboot.zip
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}_fastboot.zip $GITHUB_ENV
+          sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip $GITHUB_ENV
 
       - name: release split & info
         run: |
           mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
-          unzip -j "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}_fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
+          unzip -j "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
           cd "$GITHUB_WORKSPACE"
           touch changelog.md
           echo -e "## Build INFO\n\n- Device: ${{ env.device }}\n- Version: ${{ env.version }}\n- Region: ${{ github.event.inputs.region }}\n- Core Patch: ${{ github.event.inputs.core }}" >> changelog.md

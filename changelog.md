@@ -1,5 +1,4 @@
-# **Changelog** [HyperMod v1.0.0]()
-###### Initial Build
+# **Changelog**
 ### **Framework**
 - Disabled `signature verification`
 - Disabled `secure flag`
@@ -7,11 +6,16 @@
 ### **Packages**
 - Debloated `Unwanted Apps`
 - Modified `Launcher`
+- Modified `App Vault`
+- Modified `Theme Manager`
+- Modified `Security`
 - Updated `Google Play Store`
 - Updated `Google Services`
+- Added `aosp Instaler`
 ### **ZIP**
 - Added `Magisk Boot Image`
 - Disabled `dm-verity`
 - Installer `linux`, `windows`
 - Build `erofs`
 - RW `no`
+###### Initial Build

@@ -4,7 +4,6 @@ import logging
 import shutil
 import sys
 
-# Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -29,7 +28,7 @@ def modify_file(file_path):
     for line in lines:
         if in_method:
             if line.strip() == '.end method':
-                modified_lines.append(method_start_line)  # Add the .method line
+                modified_lines.append(method_start_line)
                 if method_type == "checkCapability":
                     logging.info(f"Modifying method body for {method_type}")
                     modified_lines.append("    .registers 4\n")
@@ -64,7 +63,7 @@ def modify_file(file_path):
             if pattern.search(line):
                 in_method = True
                 method_type = key
-                method_start_line = line  # Save the .method line
+                method_start_line = line
                 break
 
         if not in_method:
@@ -161,9 +160,9 @@ def modify_invoke_static(file_path):
                 if re.match(r'\s*move-result\s+(v\d+)', lines[j]):
                     variable = re.search(r'\s*move-result\s+(v\d+)', lines[j]).group(1)
                     logging.info(f"Replacing line: {lines[j].strip()} with const/4 {variable}, 0x1")
-                    modified_lines[-1] = line  # Restore the original line
+                    modified_lines[-1] = line
                     modified_lines.append(f"    const/4 {variable}, 0x1\n")
-                    i = j  # Skip the move-result line
+                    i = j
                     break
         i += 1
 
@@ -256,8 +255,8 @@ def modify_smali_files(directories):
         else:
             logging.warning(f"File not found: {apk_signature_verifier}")
 
-        # Run these modifications only if sys.argv[1] is "true"
         if core:
+
             if os.path.exists(apk_signature_scheme_v2_verifier):
                 logging.info(f"Found file: {apk_signature_scheme_v2_verifier}")
                 modify_apk_signature_scheme_v2_verifier(apk_signature_scheme_v2_verifier)

@@ -105,19 +105,11 @@ echo -e "${BLUE}- decompiled miui_framework dex files"
 # patch framework files
 echo -e "${YELLOW}- patching framework files"
 cd "${WORKSPACE}/Builder/framework_patcher/" || exit
-ls
-python3 framework_patch.py "$CORE"
-if [ "$CORE" == "true" ]; then
 
-  python3 services_patch.py
-  python3 miui-service_Patch.py
-  python3 miui-framework_patch.py
-else
-  python3 nframework_patch.py
-  python3 nservices_patch.py
-  python3 miui-service_Patch.py
-  python3 miui-framework_patch.py
-fi
+python3 framework_patch.py "$CORE"
+python3 services_patch.py "$CORE"
+python3 miui-service_Patch.py
+python3 miui-framework_patch.py
 
 # compile framework files
 echo -e "${YELLOW}- compiling framework dex files"

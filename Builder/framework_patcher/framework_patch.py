@@ -289,7 +289,6 @@ def modify_smali_files(directories):
                 logging.warning(f"File not found: {strict_jar_verifier}")
 
 
-
 if __name__ == "__main__":
     directories = ["classes", "classes2", "classes3", "classes4", "classes5"]
     modify_smali_files(directories)

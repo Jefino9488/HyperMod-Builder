@@ -11,7 +11,7 @@ GREEN='\033[1;32m'
 echo -e "${YELLOW}- modifying product"
 
 if [ "$REGION" == "CN" ]; then
-  unwanted_files=("MiuiHome" "MIUIThemeManager" "AnalyticsCore" "GooglePlayServicesUpdater" "PaymentService" "MIpay" "XiaoaiEdgeEngine" "MIUIAiasstService" "MIUIGuardProvider" "MINextpay" "MiGameService_MTK" "AiAsstVision" "CarWith" "MIUISuperMarket" "MIUIgreenguard" "SogouInput" "VoiceAssistAndroidT" "XiaoaiRecommendation" "Updater" "CatchLog" "MIUIBrowser" "MIUIMusicT" "MIUIVideo" "MiGameCenterSDKService" "VoiceTrigger" "MIUIQuickSearchBox" "MIUIMiDrive" "MIUIDuokanReader" "MIUIHuanji" "MIUIGameCenter" "Health" "MIGalleryLockscreen-MIUI15" "MIMediaEditor" "MIUICalculator" "MIUICleanMaster" "MIUICompass" "MIUIEmail" "MIUINewHome_Removable" "MIUINotes" "MIUIScreenRecorderLite" "MIUISoundRecorderTargetSdk30" "MIUIVipAccount" "MIUIVirtualSim" "MIUIXiaoAiSpeechEngine" "MIUIYoupin" "MiRadio" "MiShop" "MiuiScanner" "SmartHome" "ThirdAppAssistant" "XMRemoteController" "com.iflytek.inputmethod.miui" "wps-lite" "BaiduIME")
+  unwanted_files=("GmsCore" "MiuiHome" "MIUIThemeManager" "AnalyticsCore" "GooglePlayServicesUpdater" "PaymentService" "MIpay" "XiaoaiEdgeEngine" "MIUIAiasstService" "MIUIGuardProvider" "MINextpay" "MiGameService_MTK" "AiAsstVision" "CarWith" "MIUISuperMarket" "MIUIgreenguard" "SogouInput" "VoiceAssistAndroidT" "XiaoaiRecommendation" "Updater" "CatchLog" "MIUIBrowser" "MIUIMusicT" "MIUIVideo" "MiGameCenterSDKService" "VoiceTrigger" "MIUIQuickSearchBox" "MIUIMiDrive" "MIUIDuokanReader" "MIUIHuanji" "MIUIGameCenter" "Health" "MIGalleryLockscreen-MIUI15" "MIMediaEditor" "MIUICalculator" "MIUICleanMaster" "MIUICompass" "MIUIEmail" "MIUINewHome_Removable" "MIUINotes" "MIUIScreenRecorderLite" "MIUISoundRecorderTargetSdk30" "MIUIVipAccount" "MIUIVirtualSim" "MIUIXiaoAiSpeechEngine" "MIUIYoupin" "MiRadio" "MiShop" "MiuiScanner" "SmartHome" "ThirdAppAssistant" "XMRemoteController" "com.iflytek.inputmethod.miui" "wps-lite" "BaiduIME")
 else
   unwanted_files=("Drive" "GlobalWPSLITE" "MIDrop" "MIMediaEditorGlobal" "MISTORE_OVERSEA" "MIUICalculatorGlobal" "MIUICompassGlobal" "MIUINotes" "MIUIScreenRecorderLiteGlobal" "MIUISoundRecorderTargetSdk30Global" "MIUIWeatherGlobal" "Meet" "MiCare" "MiGalleryLockScreenGlobal" "MicrosoftOneDrive" "MiuiScanner" "Opera" "Photos" "SmartHome" "Videos" "XMRemoteController" "YTMusic" "Gmail2" "MIRadioGlobal" "MIUIHealthGlobal" "MIUIMiPicks" "Maps" "PlayAutoInstallStubApp" "Updater" "YouTube" "AndroidAutoStub" "MIUIMusicGlobal" "Velvet" "")
 fi
@@ -36,7 +36,10 @@ if [ "$REGION" == "CN" ]; then
   echo -e "${GREEN}Gboard added"
   mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore"
   mv "${WORKSPACE}/Builder/apps/playstore.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore/"
-  echo -e "${GREEN}Playstore added"
+  echo -e "${GREEN}Playstore Updated"
+  mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/GmsCore"
+  mv "${WORKSPACE}/Builder/apps/gms.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/GmsCore/"
+  echo -e "${GREEN}GooglePlayServices Updated"
   mkdir "${WORKSPACE}/${DEVICE}/images/product/priv-app/MiuiHome/"
   mv "${WORKSPACE}/Builder/apps/MiuiHome.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/MiuiHome/"
   echo -e "${GREEN}MiuiHome added"

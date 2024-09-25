@@ -1,7 +1,7 @@
 # HyperMod-`builder` [![HyperMod_Fastboot](https://github.com/Jefino9488/HyperMod-Builder/actions/workflows/Hyper_Builder.yml/badge.svg)](https://github.com/Jefino9488/HyperMod-Builder/actions/workflows/Hyper_Builder.yml)
 
 
-**`HyperMod-builder`** is a workflow designed to streamline the process of building custom ROMs for various devices. This project allows for easy customization and patching of recovery ROMs based on the region and core patch requirements.
+**`HyperMod-builder`** is a workflow designed to streamline the process of building custom ROMs for various devices. This project allows for easy customization and patching of recovery ROMs based on the region.
 
 > **Note:** This website is still in **beta**. Features and functionalities are subject to change as development progresses.
 
@@ -9,7 +9,7 @@
 - Automated extraction and patching of official recovery ROMs.
 - Device-specific build processes.
 - Custom region selection (CN/Global).
-- Optional core patch application.
+- Optional core patch.
 - Automatic repacking and uploading of modified fastboot ROMs.
 
 ## Workflow Inputs
@@ -30,8 +30,8 @@ Each build generates a release with:
 - Download link for the ROM.
 - Changelog with build details.
 
-## Changelog
-To see the full changelog navigate to, [CHANGELOG.md](changelog.md).
+## Version History
+- **HyperMod [V1.0.0](changelog.md)** - Initial release with basic features.
 
 ## Getting Started
 

@@ -1,4 +1,4 @@
-# **Changelog**
+# **Changelog** V1.0.0
 ### **Framework**
 - Disabled `signature verification`
 - Disabled `secure flag`

@@ -24,9 +24,8 @@ on:
         default: 'false'
       ext4_rw:
         description: 'build with ext4 & rw'
-        options:
-          - 'true'
-          - 'false'
+        type: boolean
+        default: false
 
 jobs:
   build:

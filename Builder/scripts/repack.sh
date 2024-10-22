@@ -33,8 +33,8 @@ for partition in "${partitions[@]}"; do
   sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
   sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
   eval "${partition}_inode=$(sudo cat "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config | wc -l)"
-  eval "${partition}_inode=$((echo "$(eval echo \$"${partition}_inode") + 8)) | bc"
-  "${WORKSPACE}/tools/make2fs" -O ^has_journal -L "$partition" -I 256 -N $(eval echo \$"${partition}_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img $((eval echo \$"${partition}_inode")) || false
+  eval "${partition}_inode=$(echo "$(eval echo \$"${partition}_inode") + 8" | bc) || false
+  ${WORKSPACE}/tools/make2fs" -O ^has_journal -L "$partition" -I 256 -N $(eval echo \$"${partition}_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img $((eval echo \$"${partition}_inode")) || false
   if [ "$EXT4_RW" == "true" ]; then
     sudo "${WORKSPACE}/tools/e2fsdroid -e -T 1230768000 -C "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config -S "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts -f "$WORKSPACE"/"${DEVICE}"/images/$partition -a /$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img" || false
     "${WORKSPACE}/tools/resize2fs" "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false

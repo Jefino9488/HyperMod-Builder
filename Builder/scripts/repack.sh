@@ -37,7 +37,7 @@ for partition in "${partitions[@]}"; do
     inode_count=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config")
     inode_count=$((inode_count + 8)) || false
 
-    "${WORKSPACE}/tools/mke2fs" -O ^has_journal -L "$partition" -I 256 -N "$inode_count" -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$inode_count" || false
+    "${WORKSPACE}/tools/mke2fs" -O ^has_journal -L "$partition" -I 256 -N $(eval echo "$"$partition"_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img $(eval echo "$"$partition"_size") || false
 
     if [ "$EXT4_RW" == "true" ]; then
         sudo "${WORKSPACE}/tools/e2fsdroid" \

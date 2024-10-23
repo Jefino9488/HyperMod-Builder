@@ -91,7 +91,7 @@ move_images_and_calculate_sizes() {
 
     # Calculate total size of all images using previously calculated sizes
     echo -e "${YELLOW}- Calculating total size of all images"
-    super_size=9126805504
+    super_size=9526805504
     total_size=$((${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0}))
 
     echo -e "${BLUE}- Size of all images"

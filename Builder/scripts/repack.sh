@@ -35,7 +35,7 @@ if [ "$EXT4" = true ]; then
     echo -e "\e[1;33m - ${i}.img Free Space: $File_Type\e[0m"
   }
   for i in product system system_ext vendor; do
-    eval "$i"_size_orig=$(sudo du -sb "$GITHUB_WORKSPACE"/images/$i | awk {'print $1'})
+    eval "$i"_size_orig=$(sudo du -sb "$WORKSPACE"/"${DEVICE}"/images/$i | awk {'print $1'})
     if [[ "$(eval echo "$"$i"_size_orig")" -lt "104857600" ]]; then
       size=$(echo "$(eval echo "$"$i"_size_orig") * 15 / 10 / 4096 * 4096" | bc)
     elif [[ "$(eval echo "$"$i"_size_orig")" -lt "1073741824" ]]; then
@@ -60,13 +60,16 @@ if [ "$EXT4" = true ]; then
     sudo "$WORKSPACE"/tools/resize2fs -f -M "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
   done
 else
-  sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
-  sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
-  echo -e "${GREEN}- Creating $partition in erofs format"
-  sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
+  for partition in product system system_ext vendor; do
+    sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
+    sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
+    echo -e "${GREEN}- Creating $partition in erofs format"
+    sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
+    sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition
+  done
 fi
 
-sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition
+
 
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"

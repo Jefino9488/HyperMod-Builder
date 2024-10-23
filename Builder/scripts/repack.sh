@@ -91,7 +91,7 @@ move_images_and_calculate_sizes() {
 
     # Calculate total size of all images using previously calculated sizes
     echo -e "${YELLOW}- Calculating total size of all images"
-    super_size=9526805504
+    super_size=9126805504
     total_size=$((${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0}))
 
     echo -e "${BLUE}- Size of all images"
@@ -110,7 +110,11 @@ move_images_and_calculate_sizes() {
 create_super_image() {
     echo -e "${YELLOW}- Creating super image"
 
-    lpargs="--metadata-size 65536 --super-name super --block-size 4096 --metadata-slots 3 --device super:${super_size} --group main_a:${super_size} --group main_b:${super_size}"
+    total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
+    block_size=4096
+    super_size=$(( (total_size + block_size - 1) / block_size * block_size ))
+
+    lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device super:${super_size} --group main_a:${super_size} --group main_b:${super_size}"
 
     for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/super_maker/${pname}.img" ]; then
@@ -124,6 +128,7 @@ create_super_image() {
 
     echo -e "${BLUE}- Created super image"
 }
+
 
 move_super_image() {
     echo -e "${YELLOW}- Moving super image"

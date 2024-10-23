@@ -114,7 +114,7 @@ create_super_image() {
 
     for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/super_maker/${pname}.img" ]; then
-            subsize=$(du -sb "${WORKSPACE}/super_maker/${pname}.img" | tr -cd 0-9)
+            eval subsize="\$${pname}_size"
             echo -e "${GREEN}Super sub-partition [$pname] size: [$subsize]"
             lpargs="$lpargs --partition ${pname}_a:readonly:${subsize}:main_a --image ${pname}_a=${WORKSPACE}/super_maker/${pname}.img --partition ${pname}_b:readonly:0:main_b"
         fi

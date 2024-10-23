@@ -1,110 +1,27 @@
-#!/bin/bash
-
 DEVICE="$1"
 WORKSPACE="$2"
-EXT4_RW="$3"
 
 RED='\033[1;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
-NC='\033[0m'
 
-# Make tools executable
-for tool in fspatch.py contextpatch.py mkfs.erofs mke2fs e2fsdroid vbmeta-disable-verification; do
-    sudo chmod +x "${WORKSPACE}/tools/${tool}"
+sudo chmod +x "${WORKSPACE}/tools/fspatch.py"
+sudo chmod +x "${WORKSPACE}/tools/contextpatch.py"
+sudo chmod +x "${WORKSPACE}/tools/mkfs.erofs"
+sudo chmod +x "${WORKSPACE}/tools/vbmeta-disable-verification"
+
+echo -e "${YELLOW}- repacking images"
+partitions=("vendor" "product" "system" "system_ext")
+for partition in "${partitions[@]}"; do
+  echo -e "${Red}- generating: $partition"
+  sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
+  sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
+  sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
+  sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition
 done
-
-img_free() {
-    local size_free
-    size_free="$(tune2fs -l "${WORKSPACE}/${DEVICE}/images/${1}.img" 2>/dev/null | grep "Free blocks" | awk '{print $3}')"
-    if [ -z "$size_free" ]; then
-        echo -e "${YELLOW} - ${1}.img free space calculation failed${NC}"
-        return
-    }
-
-    size_free="$(echo "$size_free / 4096 * 1024 * 1024" | bc)"
-    if [[ $size_free -ge 1073741824 ]]; then
-        File_Type=$(awk "BEGIN{print $size_free/1073741824}")G
-    elif [[ $size_free -ge 1048576 ]]; then
-        File_Type=$(awk "BEGIN{print $size_free/1048576}")MB
-    elif [[ $size_free -ge 1024 ]]; then
-        File_Type=$(awk "BEGIN{print $size_free/1024}")kb
-    else
-        File_Type=${size_free}b
-    fi
-    echo -e "${YELLOW} - ${1}.img free space: $File_Type${NC}"
-}
-
-repack_partition() {
-    local partition=$1
-    local inode_multiplier=1.1  # Adjust this value if needed
-
-    echo -e "${RED}- generating: $partition${NC}"
-
-    # Run fspatch and contextpatch
-    sudo python3 "$WORKSPACE/tools/fspatch.py" \
-        "$WORKSPACE/${DEVICE}/images/$partition" \
-        "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config"
-
-    sudo python3 "$WORKSPACE/tools/contextpatch.py" \
-        "$WORKSPACE/${DEVICE}/images/$partition" \
-        "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts"
-
-    # Calculate inodes based on file count
-    local file_count
-    file_count=$(find "$WORKSPACE/${DEVICE}/images/$partition" -type f | wc -l)
-    local inode_count
-    inode_count=$(echo "$file_count * $inode_multiplier" | bc | cut -d. -f1)
-
-    # Calculate partition size
-    local partition_size
-    partition_size=$(du -sb "$WORKSPACE/${DEVICE}/images/$partition" | awk '{print int($1 * 1.2)}')
-
-    if [ "$EXT4_RW" == "true" ]; then
-        # Create ext4 image
-        "${WORKSPACE}/tools/mke2fs" -O ^has_journal -L "$partition" \
-            -I 256 -N "$inode_count" -M "/$partition" \
-            -m 0 -b 4096 "$WORKSPACE/${DEVICE}/images/${partition}.img" "$partition_size"
-
-        sudo "${WORKSPACE}/tools/e2fsdroid" \
-            -e \
-            -T 1230768000 \
-            -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" \
-            -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" \
-            -f "$WORKSPACE/${DEVICE}/images/$partition" \
-            -a "/$partition" \
-            "$WORKSPACE/${DEVICE}/images/${partition}.img"
-
-        "${WORKSPACE}/tools/resize2fs" -M "$WORKSPACE/${DEVICE}/images/${partition}.img"
-    else
-        # Create EROFS image
-        sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 \
-            -T 1230768000 \
-            --mount-point "/$partition" \
-            --fs-config-file "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" \
-            --file-contexts "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" \
-            "$WORKSPACE/${DEVICE}/images/${partition}.img" \
-            "$WORKSPACE/${DEVICE}/images/$partition"
-    fi
-
-    if [ -f "$WORKSPACE/${DEVICE}/images/${partition}.img" ]; then
-        img_free "$partition"
-        sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
-    else
-        echo -e "${RED}Failed to create ${partition}.img${NC}"
-        return 1
-    fi
-}
-
-# Main execution
-echo -e "${YELLOW}- repacking images${NC}"
-
-for partition in vendor product system system_ext; do
-    repack_partition "$partition" || exit 1
-done
-
-# Rest of the script remains the same...
+sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
+echo -e "${Green}- All partitions repacked"
 
 
 move_images_and_calculate_sizes() {
@@ -147,6 +64,7 @@ create_super_image() {
         fi
     done
 
+    # Execute the lpmake command with the constructed lpargs
     "${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/super_maker/super.img" || exit
 
     echo -e "${BLUE}- Created super image"

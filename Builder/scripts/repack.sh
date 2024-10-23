@@ -7,12 +7,13 @@ YELLOW='\033[1;33m'
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
 
-export PATH="${WORKSPACE}/tools:$PATH"
 sudo chmod +x "${WORKSPACE}/tools/fspatch.py"
 sudo chmod +x "${WORKSPACE}/tools/contextpatch.py"
 sudo chmod +x "${WORKSPACE}/tools/mkfs.erofs"
 sudo chmod +x "${WORKSPACE}/tools/vbmeta-disable-verification"
-sudo chmod +x "${WORKSPACE}/tools"/*
+sudo chmod +x "${WORKSPACE}/tools/make_ext4fs"
+sudo chmod +x "${WORKSPACE}/tools/mke2fs"
+sudo chmod +x "${WORKSPACE}/tools/resize2fs"
 
 echo -e "${YELLOW}- repacking images"
 partitions=("vendor" "product" "system" "system_ext")

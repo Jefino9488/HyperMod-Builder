@@ -10,6 +10,7 @@ GREEN='\033[1;32m'
 sudo chmod +x "${WORKSPACE}/tools/fspatch.py"
 sudo chmod +x "${WORKSPACE}/tools/contextpatch.py"
 sudo chmod +x "${WORKSPACE}/tools/mkfs.erofs"
+sudo chmod +x "${WORKSPACE}/tools/mke2fs"
 sudo chmod +x "${WORKSPACE}/tools/e2fsdroid"
 sudo chmod +x "${WORKSPACE}/tools/vbmeta-disable-verification"
 img_free() {
@@ -37,7 +38,7 @@ for partition in "${partitions[@]}"; do
     inode_count=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config")
     inode_count=$((inode_count + 8)) || false
 
-    "${WORKSPACE}/tools/mke2fs" -O ^has_journal -L "$partition" -I 256 -N $(eval echo "$"$partition"_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img $(eval echo "$"$partition"_size") || false
+    "${WORKSPACE}/tools/mke2fs" -O ^has_journal -L "$partition" -I 256 -N $(eval echo "$"$partition"_inode") -M /$partition -m 0 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img $(eval echo "$"$partition"_size") || false
 
     if [ "$EXT4_RW" == "true" ]; then
         sudo "${WORKSPACE}/tools/e2fsdroid" \

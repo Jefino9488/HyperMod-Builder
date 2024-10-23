@@ -48,13 +48,13 @@ echo -e "${GREEN}- All partitions repacked"
 move_images_and_calculate_sizes() {
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"
     local IMAGE
-    super_size=0  # Initialize super_size
+    super_size=0
     for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
             mv -t "${WORKSPACE}/super_maker" "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" || exit
             eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/super_maker/$IMAGE.img\" | awk '{print \$1}')"
             super_size=$((super_size + ${!IMAGE}_size))  # Accumulate image sizes
-            echo -e "${BLUE}- Moved $IMAGE"
+            echo -e "${BLUE}- Moved $IMAGE, size: ${!IMAGE}_size"
         fi
     done
 

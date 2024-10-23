@@ -21,55 +21,53 @@ sudo chmod +x "${WORKSPACE}/tools/simg2img"
 
 echo -e "${YELLOW}- Repacking images"
 if [ "$EXT4" = true ]; then
-  img_free() {
-    size_free="$(sudo "$WORKSPACE"/tools/tune2fs -l "$WORKSPACE"/"${DEVICE}"/images/${partition}.img | awk '/Free blocks:/ { print $3 }')"
-    size_free="$(echo "$size_free / 4096 * 1024 * 1024" | bc)"
-    if [[ $size_free -ge 1073741824 ]]; then
-      File_Type=$(awk "BEGIN{print $size_free/1073741824}")G
-    elif [[ $size_free -ge 1048576 ]]; then
-      File_Type=$(awk "BEGIN{print $size_free/1048576}")MB
-    elif [[ $size_free -ge 1024 ]]; then
-      File_Type=$(awk "BEGIN{print $size_free/1024}")kb
-    elif [[ $size_free -le 1024 ]]; then
-      File_Type=${size_free}b
-    fi
-    echo -e "\e[1;33m - ${i}.img Free Space: $File_Type\e[0m"
-  }
-  for i in product system system_ext vendor; do
-    eval "$i"_size_orig=$(sudo du -sb "$WORKSPACE"/"${DEVICE}"/images/$i | awk {'print $1'})
-    if [[ "$(eval echo "$"$i"_size_orig")" -lt "104857600" ]]; then
-      size=$(echo "$(eval echo "$"$i"_size_orig") * 15 / 10 / 4096 * 4096" | bc)
-    elif [[ "$(eval echo "$"$i"_size_orig")" -lt "1073741824" ]]; then
-      size=$(echo "$(eval echo "$"$i"_size_orig") * 108 / 100 / 4096 * 4096" | bc)
-    else
-      size=$(echo "$(eval echo "$"$i"_size_orig") * 103 / 100 / 4096 * 4096" | bc)
-    fi
-    eval "$i"_size=$(echo "$size * 4096 / 4096 / 4096" | bc)
-  done
-  for i in product system system_ext vendor; do
-    mkdir -p "$WORKSPACE"/"${DEVICE}"/images/$i/lost+found
-    sudo touch -t 202101010000 "$WORKSPACE"/"${DEVICE}"/images/$i/lost+found
-  done
-  for partition in product system system_ext vendor; do
-    sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
-    sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
-    eval "$partition"_inode=$(sudo cat "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config | wc -l)
-    eval "$partition"_inode=$(echo "$(eval echo "$"$partition"_inode") + 8" | bc)
-    sudo "$WORKSPACE/tools/make_ext4fs" \
-        -s \                              # Create sparse image
-        -l "$partition"_size \                   # Set size (adjust as necessary)
-        -b 4096 \                         # Set block size to 4096 bytes
-        -i "$partition_inode" \            # Set the number of inodes
-        -I 256 \                          # Set the inode size
-        -L "$partition" \                 # Set the label (partition name)
-        -a "$partition" \                 # Set mountpoint to partition name
-        -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" \   # fs_config
-        -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" \  # file_contexts
-        "$WORKSPACE/${DEVICE}/images/$partition.img" \  # Output image
-        "$WORKSPACE/${DEVICE}/images/$partition" || false   # Input directory
+    for i in product system system_ext vendor; do
+        size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$i" | awk '{print $1}')
 
-    sudo "$WORKSPACE"/tools/resize2fs -f -M "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
-  done
+        # Adjust size based on thresholds and calculate a padded size
+        if [[ "$size_orig" -lt "104857600" ]]; then
+          size=$(echo "$size_orig * 15 / 10 / 4096 * 4096" | bc)
+        elif [[ "$size_orig" -lt "1073741824" ]]; then
+          size=$(echo "$size_orig * 108 / 100 / 4096 * 4096" | bc)
+        else
+          size=$(echo "$size_orig * 103 / 100 / 4096 * 4096" | bc)
+        fi
+
+        # Store the calculated size for each partition
+        eval "$i"_size=$size
+    done
+
+    # Loop to create lost+found directories and set timestamps
+    for i in product system system_ext vendor; do
+        mkdir -p "$WORKSPACE/${DEVICE}/images/$i/lost+found"
+        sudo touch -t 202101010000 "$WORKSPACE/${DEVICE}/images/$i/lost+found"
+    done
+
+    # Loop to patch fs_config, file_contexts, and create the ext4 filesystem
+    for partition in product system system_ext vendor; do
+        # Patch fs_config and file_contexts
+        sudo python3 "$WORKSPACE/tools/fspatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config"
+        sudo python3 "$WORKSPACE/tools/contextpatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts"
+
+        # Calculate number of inodes based on fs_config
+        partition_inode=$(sudo cat "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" | wc -l)
+        partition_inode=$(echo "$partition_inode + 8" | bc)  # Adding buffer inodes
+
+        # Generate the ext4 filesystem image using make_ext4fs
+        sudo "$WORKSPACE/tools/make_ext4fs" \
+            -s \                              # Create sparse image
+            -l "$(eval echo \$${partition}_size)" \  # Set partition size
+            -b 4096 \                         # Set block size to 4096 bytes
+            -i "$partition_inode" \           # Set number of inodes
+            -I 256 \                          # Set inode size (default 256)
+            -L "$partition" \                 # Set label to partition name
+            -a "$partition" \                 # Mountpoint
+            -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" \  # fs_config
+            -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" \  # file_contexts
+            "$WORKSPACE/${DEVICE}/images/$partition.img" \  # Output image
+            "$WORKSPACE/${DEVICE}/images/$partition" || false  # Input directory
+    done
+
 else
   for partition in product system system_ext vendor; do
     sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config

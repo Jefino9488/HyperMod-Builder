@@ -24,27 +24,32 @@ img_free() {
     elif [[ $size_free -le 1024 ]]; then
       File_Type=${size_free}b
     fi
-    echo -e "\e[1;33m - ${i}.img 剩余空间: $File_Type \e[0m"
+    echo -e "\e[1;33m - ${i}.img free space: $File_Type" \e[0m
   }
 echo -e "${YELLOW}- repacking images"
 partitions=("vendor" "product" "system" "system_ext")
 for partition in "${partitions[@]}"; do
-  echo -e "${RED}- generating: $partition"
-  sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
-  sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
-  eval "${partition}_inode=$(sudo cat "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config | wc -l)"
-  eval "${partition}_inode=$(echo "$(eval echo \$"${partition}_inode") + 8" | bc) || false
-  ${WORKSPACE}/tools/make2fs" -O ^has_journal -L "$partition" -I 256 -N $(eval echo \$"${partition}_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img $((eval echo \$"${partition}_inode")) || false
-  if [ "$EXT4_RW" == "true" ]; then
-    sudo "${WORKSPACE}/tools/e2fsdroid -e -T 1230768000 -C "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config -S "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts -f "$WORKSPACE"/"${DEVICE}"/images/$partition -a /$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img" || false
-    "${WORKSPACE}/tools/resize2fs" "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
-    eval "${partition}_size=$(du -sb "$WORKSPACE"/"${DEVICE}"/images/$partition.img | awk '{print $1}')"
-    img_free
-  else
-    sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
-  fi
-  sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/"$partition"
+    echo -e "${RED}- generating: $partition"
+    sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
+    sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
+
+    # Fixed inode calculation without eval
+    inode_count=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config")
+    inode_count=$((inode_count + 8)) || false
+
+    "${WORKSPACE}/tools/make2fs" -O ^has_journal -L "$partition" -I 256 -N "$inode_count" -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$inode_count" || false
+
+    if [ "$EXT4_RW" == "true" ]; then
+        sudo "${WORKSPACE}/tools/e2fsdroid" -e -T 1230768000 -C "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config -S "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts -f "$WORKSPACE"/"${DEVICE}"/images/$partition -a /$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
+        "${WORKSPACE}/tools/resize2fs" "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
+        eval "${partition}_size=$(du -sb "$WORKSPACE"/"${DEVICE}"/images/$partition.img | awk '{print $1}')"
+        img_free
+    else
+        sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
+    fi
+    sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/"$partition"
 done
+
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
 

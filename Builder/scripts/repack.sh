@@ -77,19 +77,23 @@ echo -e "${GREEN}- All partitions repacked"
 move_images_and_calculate_sizes() {
     mkdir -p "${WORKSPACE}/super_maker"
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"
+
     local IMAGE
     for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
             mv -t "${WORKSPACE}/super_maker" "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" || exit
+
+            # Use the previously calculated sizes instead of recalculating
             eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/super_maker/$IMAGE.img\" | awk '{print \$1}')"
             echo -e "${BLUE}- Moved $IMAGE"
         fi
     done
 
-    # Calculate total size of all images
+    # Calculate total size of all images using previously calculated sizes
     echo -e "${YELLOW}- Calculating total size of all images"
     super_size=9126805504
     total_size=$((${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0}))
+
     echo -e "${BLUE}- Size of all images"
     echo -e "system: ${system_size:-0}"
     echo -e "system_ext: ${system_ext_size:-0}"
@@ -101,6 +105,7 @@ move_images_and_calculate_sizes() {
     echo -e "mi_ext: ${mi_ext_size:-0}"
     echo -e "total size: $total_size"
 }
+
 
 create_super_image() {
     echo -e "${YELLOW}- Creating super image"

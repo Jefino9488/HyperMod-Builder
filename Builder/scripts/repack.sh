@@ -23,21 +23,37 @@ partitions=("vendor" "product" "system" "system_ext")
 for partition in "${partitions[@]}"; do
   sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
   sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
-  eval "$partition"_inode=$(sudo cat "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config | wc -l)
-  eval "$partition"_inode=$(echo "$(eval echo "$"$partition"_inode") + 8" | bc)
   echo -e "${RED}- Generating: $partition"
   if [ "$EXT4" = true ]; then
-    echo -e "${GREEN}- Creating $partition in ext4 format"
-    sudo "$WORKSPACE"/tools/mke2fs -O ^has_journal -L $partition -I 256 -N $(eval echo "$"$partition"_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/$partition.img $(eval echo "$"$partition"_size") || false
-    sudo "$WORKSPACE"/tools/e2fsdroid -e -T 1230768000 -C "$WORKSPACE"/images/config/"$partition"_fs_config -S "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts -f "$WORKSPACE"/"${DEVICE}"/images/$partition -a /$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
+    img_free() {
+      size_free="$(sudo "$WORKSPACE"/tools/tune2fs -l "$WORKSPACE"/"${DEVICE}"/images/${partition}.img | awk '/Free blocks:/ { print $3 }')"
+      size_free="$(echo "$size_free / 4096 * 1024 * 1024" | bc)"
+      if [[ $size_free -ge 1073741824 ]]; then
+        File_Type=$(awk "BEGIN{print $size_free/1073741824}")G
+      elif [[ $size_free -ge 1048576 ]]; then
+        File_Type=$(awk "BEGIN{print $size_free/1048576}")MB
+      elif [[ $size_free -ge 1024 ]]; then
+        File_Type=$(awk "BEGIN{print $size_free/1024}")kb
+      elif [[ $size_free -le 1024 ]]; then
+        File_Type=${size_free}b
+      fi
+      echo -e "\e[1;33m - ${i}.img Free Space: $File_Type\e[0m"
+    }
+    for i in product system system_ext vendor; do
+      mkdir -p "$WORKSPACE"/"${DEVICE}"/images/$i/lost+found
+      sudo touch -t 202101010000 "$WORKSPACE"/"${DEVICE}"/images/$i/lost+found
+    done
+    for $partition in product system system_ext vendor; do
+      eval "$partition"_inode=$(sudo cat "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config | wc -l)
+      eval "$partition"_inode=$(echo "$(eval echo "$"$partition"_inode") + 8" | bc)
+      sudo "$WORKSPACE"/tools/mke2fs -O ^has_journal -L $partition -I 256 -N $(eval echo "$"$partition"_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/$partition.img $(eval echo "$"$partition"_size") || false
+#      sudo "${WORKSPACE}/tools/make_ext4fs" -s -l 4096M -a "$partition" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition || false
+      sudo "$WORKSPACE"/tools/e2fsdroid -e -T 1230768000 -C "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts -S "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config -a /$partition -s "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
+      sudo "$WORKSPACE"/tools/resize2fs -f -M "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
+    done
   else
     echo -e "${GREEN}- Creating $partition in erofs format"
     sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
-  fi
-
-  if [ "$EXT4" = false ]; then
-    echo -e "${GREEN}- Converting $partition to sparse format"
-    sudo "${WORKSPACE}/tools/simg2img" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition.img
   fi
 
   sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition
@@ -50,17 +66,28 @@ echo -e "${GREEN}- All partitions repacked"
 move_images_and_calculate_sizes() {
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"
     local IMAGE
-    super_size=0
     for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
             mv -t "${WORKSPACE}/super_maker" "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" || exit
             eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/super_maker/$IMAGE.img\" | awk '{print \$1}')"
-            super_size=$((super_size + ${!IMAGE}_size))  # Accumulate image sizes
-            echo -e "${BLUE}- Moved $IMAGE, size: ${!IMAGE}_size"
+            echo -e "${BLUE}- Moved $IMAGE"
         fi
     done
 
-    echo -e "${BLUE}- Total size of all images: $super_size"  # Output total size
+    # Calculate total size of all images
+    echo -e "${YELLOW}- Calculating total size of all images"
+    super_size=9126805504
+    total_size=$((${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0}))
+    echo -e "${BLUE}- Size of all images"
+    echo -e "system: ${system_size:-0}"
+    echo -e "system_ext: ${system_ext_size:-0}"
+    echo -e "product: ${product_size:-0}"
+    echo -e "vendor: ${vendor_size:-0}"
+    echo -e "odm: ${odm_size:-0}"
+    echo -e "odm_dlkm: ${odm_dlkm_size:-0}"
+    echo -e "vendor_dlkm: ${vendor_dlkm_size:-0}"
+    echo -e "mi_ext: ${mi_ext_size:-0}"
+    echo -e "total size: $total_size"
 }
 
 create_super_image() {

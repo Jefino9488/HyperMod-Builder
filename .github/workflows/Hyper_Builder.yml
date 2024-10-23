@@ -69,47 +69,47 @@ jobs:
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/unpack.sh ${{ github.event.inputs.URL }} ${{ env.device }} $GITHUB_WORKSPACE
 
-      - name: Modify Product
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/product.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.region }}
+#      - name: Modify Product
+#        run: |
+#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/product.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.region }}
 
 #      - name: Modify System
 #        run: |
 #          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system.sh ${{ env.device }} $GITHUB_WORKSPACE
 
-      - name: Modify System_ext
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system_ext.sh ${{ env.device }} $GITHUB_WORKSPACE
-
-      - name: Modify Vendor
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/vendor.sh ${{ env.device }} $GITHUB_WORKSPACE
-
-      - name: Clone smali repository
-        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
-
-      - name: Build smali and baksmali
-        run: |
-          ls
-          cd smali
-          ./gradlew build
-
-      - name: Patch Framework
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
-
-      - name: Patch Boot
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patchBOOT.sh ${{ env.device }} $GITHUB_WORKSPACE
+#      - name: Modify System_ext
+#        run: |
+#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system_ext.sh ${{ env.device }} $GITHUB_WORKSPACE
+#
+#      - name: Modify Vendor
+#        run: |
+#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/vendor.sh ${{ env.device }} $GITHUB_WORKSPACE
+#
+#      - name: Clone smali repository
+#        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
+#
+#      - name: Build smali and baksmali
+#        run: |
+#          ls
+#          cd smali
+#          ./gradlew build
+#
+#      - name: Patch Framework
+#        run: |
+#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
+#
+#      - name: Patch Boot
+#        run: |
+#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patchBOOT.sh ${{ env.device }} $GITHUB_WORKSPACE
 
       - name: Repack
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/repack.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.ext4_rw }}
 
-      - name: gofile upload
-        run: |
-          sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip $GITHUB_ENV
+#      - name: gofile upload
+#        run: |
+#          sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip
+#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip $GITHUB_ENV
 
       - name: release split & info
         run: |
@@ -135,9 +135,9 @@ jobs:
           allowUpdates: true
           makeLatest: true
 
-      - name: Notify via Telegram
-        run: |
-          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
-          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-          -d parse_mode="MarkdownV2" \
-          -d text="*New Build\!*%0A%0A*Device:* \`${{ env.device }}\`%0A*Version:* \`${{ env.version }}\`%0A*Region:* \`${{ github.event.inputs.region }}\`%0A*Core Patch:* \`${{ github.event.inputs.core }}\`%0A%0A[Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})"
+#      - name: Notify via Telegram
+#        run: |
+#          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+#          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+#          -d parse_mode="MarkdownV2" \
+#          -d text="*New Build\!*%0A%0A*Device:* \`${{ env.device }}\`%0A*Version:* \`${{ env.version }}\`%0A*Region:* \`${{ github.event.inputs.region }}\`%0A*Core Patch:* \`${{ github.event.inputs.core }}\`%0A%0A[Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})"

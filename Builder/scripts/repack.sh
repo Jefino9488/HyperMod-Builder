@@ -82,18 +82,15 @@ move_images_and_calculate_sizes() {
     for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
             mv -t "${WORKSPACE}/super_maker" "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" || exit
-
-            # Use the previously calculated sizes instead of recalculating
             eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/super_maker/$IMAGE.img\" | awk '{print \$1}')"
             echo -e "${BLUE}- Moved $IMAGE"
         fi
     done
 
-    # Calculate total size of all images using previously calculated sizes
     echo -e "${YELLOW}- Calculating total size of all images"
-    super_size=9126805504
     total_size=$((${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0}))
-
+    block_size=4096
+    super_size=$(( (total_size + block_size - 1) / block_size * block_size ))
     echo -e "${BLUE}- Size of all images"
     echo -e "system: ${system_size:-0}"
     echo -e "system_ext: ${system_ext_size:-0}"
@@ -110,15 +107,11 @@ move_images_and_calculate_sizes() {
 create_super_image() {
     echo -e "${YELLOW}- Creating super image"
 
-    total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
-    block_size=4096
-    super_size=$(( (total_size + block_size - 1) / block_size * block_size ))
-
-    lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device super:${super_size} --group main_a:${super_size} --group main_b:${super_size}"
+    lpargs="--metadata-size 65536 --super-name super --block-size 4096 --metadata-slots 3 --device super:${super_size} --group main_a:${super_size} --group main_b:${super_size}"
 
     for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/super_maker/${pname}.img" ]; then
-            eval subsize="\$${pname}_size"
+            subsize=$(du -sb "${WORKSPACE}/super_maker/${pname}.img" | tr -cd 0-9)
             echo -e "${GREEN}Super sub-partition [$pname] size: [$subsize]"
             lpargs="$lpargs --partition ${pname}_a:readonly:${subsize}:main_a --image ${pname}_a=${WORKSPACE}/super_maker/${pname}.img --partition ${pname}_b:readonly:0:main_b"
         fi

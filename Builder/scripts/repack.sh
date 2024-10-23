@@ -21,15 +21,17 @@ sudo chmod +x "${WORKSPACE}/tools/simg2img"
 echo -e "${YELLOW}- Repacking images"
 partitions=("vendor" "product" "system" "system_ext")
 for partition in "${partitions[@]}"; do
+  sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
+  sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
+  eval "$partition"_inode=$(sudo cat "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config | wc -l)
+  eval "$partition"_inode=$(echo "$(eval echo "$"$partition"_inode") + 8" | bc)
   echo -e "${RED}- Generating: $partition"
   if [ "$EXT4" = true ]; then
     echo -e "${GREEN}- Creating $partition in ext4 format"
-    sudo "${WORKSPACE}/tools/make_ext4fs" -s -l 4096M -a "$partition" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition || \
-    sudo "${WORKSPACE}/tools/mke2fs" -t ext4 -d "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img
+    sudo "$WORKSPACE"/tools/mke2fs -O ^has_journal -L $partition -I 256 -N $(eval echo "$"$partition"_inode") -M /$partition -m 0 -t ext4 -b 4096 "$WORKSPACE"/"${DEVICE}"/$partition.img $(eval echo "$"$partition"_size") || false
+    sudo "$WORKSPACE"/tools/e2fsdroid -e -T 1230768000 -C "$WORKSPACE"/images/config/"$partition"_fs_config -S "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts -f "$WORKSPACE"/"${DEVICE}"/images/$partition -a /$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img || false
   else
     echo -e "${GREEN}- Creating $partition in erofs format"
-    sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
-    sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
     sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
   fi
 

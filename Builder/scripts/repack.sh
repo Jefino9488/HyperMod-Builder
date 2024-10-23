@@ -54,18 +54,8 @@ if [ "$EXT4" = true ]; then
         partition_inode=$(echo "$partition_inode + 8" | bc)  # Adding buffer inodes
 
         # Generate the ext4 filesystem image using make_ext4fs
-        sudo "$WORKSPACE/tools/make_ext4fs" \
-            -s \                               # Create sparse image
-            -l "$(eval echo \$${partition}_size)" \  # Set partition size
-            -b 4096 \                          # Set block size to 4096 bytes
-            -i "$partition_inode" \            # Set number of inodes
-            -I 256 \                           # Set inode size (default 256)
-            -L "$partition" \                  # Set label to partition name
-            -a "$partition" \                  # Mountpoint
-            -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" \  # fs_config
-            -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" \  # file_contexts
-            "$WORKSPACE/${DEVICE}/images/$partition.img" \  # Output image
-            "$WORKSPACE/${DEVICE}/images/$partition" || false  # Input directory
+        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "$(eval echo \$${partition}_size)" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
+
     done
 else
     for partition in product system system_ext vendor; do

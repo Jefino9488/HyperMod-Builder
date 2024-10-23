@@ -36,9 +36,7 @@ for partition in "${partitions[@]}"; do
 
   if [ "$EXT4" = false ]; then
     echo -e "${GREEN}- Converting $partition to sparse format"
-    sudo "${WORKSPACE}/tools/simg2img" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/${partition}_sparse.img
-    sudo rm -f "$WORKSPACE"/"${DEVICE}"/images/$partition.img
-    sudo mv "$WORKSPACE"/"${DEVICE}"/images/${partition}_sparse.img "$WORKSPACE"/"${DEVICE}"/images/$partition.img
+    sudo "${WORKSPACE}/tools/simg2img" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition.img
   fi
 
   sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition

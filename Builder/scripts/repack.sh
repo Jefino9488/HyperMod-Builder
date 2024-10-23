@@ -75,6 +75,7 @@ sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
 
 move_images_and_calculate_sizes() {
+    mkdir -p "${WORKSPACE}/super_maker"
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"
     local IMAGE
     for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
@@ -102,7 +103,6 @@ move_images_and_calculate_sizes() {
 }
 
 create_super_image() {
-    mkdir -p "${WORKSPACE}/super_maker"
     echo -e "${YELLOW}- Creating super image"
 
     lpargs="--metadata-size 65536 --super-name super --block-size 4096 --metadata-slots 3 --device super:${super_size} --group main_a:${super_size} --group main_b:${super_size}"

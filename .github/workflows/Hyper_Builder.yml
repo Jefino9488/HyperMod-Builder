@@ -22,6 +22,10 @@ on:
           - 'true'
           - 'false'
         default: 'false'
+      ext4:
+        description: 'Create ext4 images'
+        type: boolean
+        default: false
 
 jobs:
   build:

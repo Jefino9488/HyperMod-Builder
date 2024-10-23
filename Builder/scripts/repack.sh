@@ -1,5 +1,6 @@
 DEVICE="$1"
 WORKSPACE="$2"
+EXT4=${3:-false}  # Pass true if ext4 format is required
 
 RED='\033[1;31m'
 YELLOW='\033[1;33m'
@@ -14,15 +15,25 @@ sudo chmod +x "${WORKSPACE}/tools/vbmeta-disable-verification"
 echo -e "${YELLOW}- repacking images"
 partitions=("vendor" "product" "system" "system_ext")
 for partition in "${partitions[@]}"; do
-  echo -e "${Red}- generating: $partition"
+  echo -e "${RED}- generating: $partition"
   sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
   sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
-  sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
+
+  if [ "$EXT4" = true ]; then
+    echo -e "${GREEN}- Creating $partition in ext4 format"
+    sudo make_ext4fs -s -l 4096M -a "$partition" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition || \
+    sudo mke2fs -t ext4 -d "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img
+    sudo resize2fs "$WORKSPACE"/"${DEVICE}"/images/$partition.img  # Resize ext4 image if needed
+  else
+    echo -e "${GREEN}- Creating $partition in erofs format"
+    sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
+  fi
+
   sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition
 done
-sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
-echo -e "${Green}- All partitions repacked"
 
+sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
+echo -e "${GREEN}- All partitions repacked"
 
 move_images_and_calculate_sizes() {
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"
@@ -64,7 +75,6 @@ create_super_image() {
         fi
     done
 
-    # Execute the lpmake command with the constructed lpargs
     "${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/super_maker/super.img" || exit
 
     echo -e "${BLUE}- Created super image"

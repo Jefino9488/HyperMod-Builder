@@ -49,7 +49,7 @@ if [ "$EXT4" = true ]; then
     mkdir -p "$WORKSPACE"/"${DEVICE}"/images/$i/lost+found
     sudo touch -t 202101010000 "$WORKSPACE"/"${DEVICE}"/images/$i/lost+found
   done
-  for $partition in product system system_ext vendor; do
+  for partition in product system system_ext vendor; do
     sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
     sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
     eval "$partition"_inode=$(sudo cat "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config | wc -l)
@@ -68,8 +68,6 @@ else
     sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition
   done
 fi
-
-
 
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"

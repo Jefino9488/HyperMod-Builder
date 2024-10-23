@@ -22,15 +22,14 @@ echo -e "${YELLOW}- Repacking images"
 partitions=("vendor" "product" "system" "system_ext")
 for partition in "${partitions[@]}"; do
   echo -e "${RED}- Generating: $partition"
-  sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
-  sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
-
   if [ "$EXT4" = true ]; then
     echo -e "${GREEN}- Creating $partition in ext4 format"
     sudo "${WORKSPACE}/tools/make_ext4fs" -s -l 4096M -a "$partition" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition || \
     sudo "${WORKSPACE}/tools/mke2fs" -t ext4 -d "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img
   else
     echo -e "${GREEN}- Creating $partition in erofs format"
+    sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
+    sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
     sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
   fi
 
@@ -49,28 +48,17 @@ echo -e "${GREEN}- All partitions repacked"
 move_images_and_calculate_sizes() {
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"
     local IMAGE
+    super_size=0  # Initialize super_size
     for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
             mv -t "${WORKSPACE}/super_maker" "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" || exit
             eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/super_maker/$IMAGE.img\" | awk '{print \$1}')"
+            super_size=$((super_size + ${!IMAGE}_size))  # Accumulate image sizes
             echo -e "${BLUE}- Moved $IMAGE"
         fi
     done
 
-    # Calculate total size of all images
-    echo -e "${YELLOW}- Calculating total size of all images"
-    super_size=9126805504
-    total_size=$((${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0}))
-    echo -e "${BLUE}- Size of all images"
-    echo -e "system: ${system_size:-0}"
-    echo -e "system_ext: ${system_ext_size:-0}"
-    echo -e "product: ${product_size:-0}"
-    echo -e "vendor: ${vendor_size:-0}"
-    echo -e "odm: ${odm_size:-0}"
-    echo -e "odm_dlkm: ${odm_dlkm_size:-0}"
-    echo -e "vendor_dlkm: ${vendor_dlkm_size:-0}"
-    echo -e "mi_ext: ${mi_ext_size:-0}"
-    echo -e "total size: $total_size"
+    echo -e "${BLUE}- Total size of all images: $super_size"  # Output total size
 }
 
 create_super_image() {

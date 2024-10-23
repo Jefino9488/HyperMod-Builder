@@ -1,6 +1,8 @@
+#!/bin/bash
+
 DEVICE="$1"
 WORKSPACE="$2"
-EXT4=${3:-false}  # Pass true if ext4 format is required
+EXT4=${3:-false}
 
 RED='\033[1;31m'
 YELLOW='\033[1;33m'
@@ -14,11 +16,12 @@ sudo chmod +x "${WORKSPACE}/tools/vbmeta-disable-verification"
 sudo chmod +x "${WORKSPACE}/tools/make_ext4fs"
 sudo chmod +x "${WORKSPACE}/tools/mke2fs"
 sudo chmod +x "${WORKSPACE}/tools/resize2fs"
+sudo chmod +x "${WORKSPACE}/tools/simg2img"
 
-echo -e "${YELLOW}- repacking images"
+echo -e "${YELLOW}- Repacking images"
 partitions=("vendor" "product" "system" "system_ext")
 for partition in "${partitions[@]}"; do
-  echo -e "${RED}- generating: $partition"
+  echo -e "${RED}- Generating: $partition"
   sudo python3 "$WORKSPACE"/tools/fspatch.py "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config
   sudo python3 "$WORKSPACE"/tools/contextpatch.py "$WORKSPACE"/${DEVICE}/images/$partition "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts
 
@@ -26,10 +29,16 @@ for partition in "${partitions[@]}"; do
     echo -e "${GREEN}- Creating $partition in ext4 format"
     sudo "${WORKSPACE}/tools/make_ext4fs" -s -l 4096M -a "$partition" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition || \
     sudo "${WORKSPACE}/tools/mke2fs" -t ext4 -d "$WORKSPACE"/"${DEVICE}"/images/$partition "$WORKSPACE"/"${DEVICE}"/images/$partition.img
-#    sudo "${WORKSPACE}/tools/resize2fs" "$WORKSPACE"/"${DEVICE}"/images/$partition.img  # Resize ext4 image if needed
   else
     echo -e "${GREEN}- Creating $partition in erofs format"
     sudo "${WORKSPACE}/tools/mkfs.erofs" --quiet -zlz4hc,9 -T 1230768000 --mount-point /"$partition" --fs-config-file "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_fs_config --file-contexts "$WORKSPACE"/"${DEVICE}"/images/config/"$partition"_file_contexts "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/$partition
+  fi
+
+  if [ "$EXT4" = false ]; then
+    echo -e "${GREEN}- Converting $partition to sparse format"
+    sudo "${WORKSPACE}/tools/simg2img" "$WORKSPACE"/"${DEVICE}"/images/$partition.img "$WORKSPACE"/"${DEVICE}"/images/${partition}_sparse.img
+    sudo rm -f "$WORKSPACE"/"${DEVICE}"/images/$partition.img
+    sudo mv "$WORKSPACE"/"${DEVICE}"/images/${partition}_sparse.img "$WORKSPACE"/"${DEVICE}"/images/$partition.img
   fi
 
   sudo rm -rf "$WORKSPACE"/"${DEVICE}"/images/$partition
@@ -37,6 +46,7 @@ done
 
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
+
 
 move_images_and_calculate_sizes() {
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"

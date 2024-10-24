@@ -22,38 +22,24 @@ sudo chmod +x "${WORKSPACE}/tools/simg2img"
 echo -e "${YELLOW}- Repacking images"
 if [ "$EXT4" = true ]; then
     for i in product system system_ext vendor; do
-        size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$i" | awk '{print $1}')
-
-        # Adjust size based on thresholds and calculate a padded size
-        if [[ "$size_orig" -lt "104857600" ]]; then
-            size=$(echo "$size_orig * 15 / 10 / 4096 * 4096" | bc)
-        elif [[ "$size_orig" -lt "1073741824" ]]; then
-            size=$(echo "$size_orig * 108 / 100 / 4096 * 4096" | bc)
-        else
-            size=$(echo "$size_orig * 103 / 100 / 4096 * 4096" | bc)
-        fi
-
-        # Store the calculated size for each partition
-        eval "$i"_size=$size
-    done
-
-    # Create lost+found directories and set timestamps
-    for i in product system system_ext vendor; do
         mkdir -p "$WORKSPACE/${DEVICE}/images/$i/lost+found"
         sudo touch -t 202101010000 "$WORKSPACE/${DEVICE}/images/$i/lost+found"
     done
 
-    # Patch fs_config, file_contexts, and create the ext4 filesystem
     for partition in product system system_ext vendor; do
-        # Patch fs_config and file_contexts
         sudo python3 "$WORKSPACE/tools/fspatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config"
         sudo python3 "$WORKSPACE/tools/contextpatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts"
 
-        # Calculate number of inodes based on fs_config
         partition_inode=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config")
-        partition_inode=$(echo "$partition_inode + 8" | bc)  # Adding buffer inodes
-
-        # Generate the ext4 filesystem image using make_ext4fs
+        partition_inode=$(echo "$partition_inode + 8" | bc)
+        local IMAGE
+        for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
+            if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
+                mv -t "${WORKSPACE}/super_maker" "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" || exit
+                eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/super_maker/$IMAGE.img\" | awk '{print \$1}')"
+                echo -e "${BLUE}- Moved $IMAGE"
+            fi
+        done
         sudo "$WORKSPACE/tools/make_ext4fs" -s -l "$(eval echo \$${partition}_size)" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
 
     done
@@ -75,6 +61,7 @@ sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
 
 move_images_and_calculate_sizes() {
+    mkdir -p "${WORKSPACE}/super_maker"
     echo -e "${YELLOW}- Moving images to super_maker and calculating sizes"
     local IMAGE
     for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
@@ -85,7 +72,6 @@ move_images_and_calculate_sizes() {
         fi
     done
 
-    # Calculate total size of all images
     echo -e "${YELLOW}- Calculating total size of all images"
     total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
     block_size=4096

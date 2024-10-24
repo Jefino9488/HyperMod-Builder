@@ -136,13 +136,13 @@ final_steps() {
 
     echo -e "${YELLOW}- Patching vbmeta"
     if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta.img" ]; then
-        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta.img"
+        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta.img"
     fi
     if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img" ]; then
-        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img"
+        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img"
     fi
     if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img" ]; then
-        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img"
+        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img"
     fi
 
     mkdir -p "${WORKSPACE}/zip/images"

@@ -32,16 +32,9 @@ if [ "$EXT4" = true ]; then
 
         partition_inode=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config")
         partition_inode=$(echo "$partition_inode + 8" | bc)
-        local IMAGE
-        for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
-            if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
-                mv -t "${WORKSPACE}/super_maker" "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" || exit
-                eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/super_maker/$IMAGE.img\" | awk '{print \$1}')"
-                echo -e "${BLUE}- Moved $IMAGE"
-            fi
-        done
-        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "$(eval echo \$${partition}_size)" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
-
+        partition_size=$(du -sb "$WORKSPACE/${DEVICE}/images/$partition" | awk '{print $1}')
+        echo -e "${BLUE}- Partition [$partition] size: $partition_size bytes"
+        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "$partition_size" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
     done
 else
     for partition in product system system_ext vendor; do

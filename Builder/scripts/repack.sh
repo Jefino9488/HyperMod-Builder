@@ -18,7 +18,6 @@ sudo chmod +x "${WORKSPACE}/tools/make_ext4fs"
 sudo chmod +x "${WORKSPACE}/tools/mke2fs"
 sudo chmod +x "${WORKSPACE}/tools/resize2fs"
 sudo chmod +x "${WORKSPACE}/tools/simg2img"
-sudo chmod +x "${WORKSPACE}/tools/tune2fs"
 
 echo -e "${YELLOW}- Repacking images"
 if [ "$EXT4" = true ]; then

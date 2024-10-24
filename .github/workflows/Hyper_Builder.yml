@@ -85,31 +85,31 @@ jobs:
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/vendor.sh ${{ env.device }} $GITHUB_WORKSPACE
 
-#      - name: Clone smali repository
-#        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
-#
-#      - name: Build smali and baksmali
-#        run: |
-#          ls
-#          cd smali
-#          ./gradlew build
-#
-#      - name: Patch Framework
-#        run: |
-#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
-#
-#      - name: Patch Boot
-#        run: |
-#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patchBOOT.sh ${{ env.device }} $GITHUB_WORKSPACE
+      - name: Clone smali repository
+        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
+
+      - name: Build smali and baksmali
+        run: |
+          ls
+          cd smali
+          ./gradlew build
+
+      - name: Patch Framework
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
+
+      - name: Patch Boot
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patchBOOT.sh ${{ env.device }} $GITHUB_WORKSPACE
 
       - name: Repack
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/repack.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.ext4 }}
 
-#      - name: gofile upload
-#        run: |
-#          sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip
-#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip $GITHUB_ENV
+      - name: gofile upload
+        run: |
+          sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip $GITHUB_ENV
 
       - name: release split & info
         run: |

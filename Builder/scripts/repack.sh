@@ -72,11 +72,10 @@ if [ "$EXT4" = true ]; then
 
         sudo "$WORKSPACE/tools/make_ext4fs" -s -l "$(eval echo \$${partition}_size)" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
         sudo "$WORKSPACE/tools/resize2fs" -f -M "$WORKSPACE/${DEVICE}/images/$partition.img"
-        eval "$i"_size=$(du -sb "$WORKSPACE"/${DEVICE}/images/$partition.img | awk {'print $partition'})
-        echo "$partition size:" "$i"_size
-        ls -l "$WORKSPACE/${DEVICE}/images"
-        img_free
+        sudo eval "$i"_size=$(du -sb "$WORKSPACE"/${DEVICE}/images/$partition.img | awk {'print $partition'})
+        echo "$partition size:" $(eval echo \$${partition}_size)
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
+        ls -l "$WORKSPACE/${DEVICE}/images"
     done
 else
     for partition in product system system_ext vendor; do
@@ -99,7 +98,7 @@ echo -e "${GREEN}- All partitions repacked"
 # create super
 total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
 block_size=4096
-super_size=$(( (total_size + block_size - 1) / block_size * block_size ))
+super_size=9126805504
 lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device super:${super_size} --group main_a:${super_size} --group main_b:${super_size}"
 for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then

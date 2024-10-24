@@ -135,14 +135,20 @@ final_steps() {
     mv "${WORKSPACE}/magisk/new-boot.img" "${WORKSPACE}/${DEVICE}/images/magisk_boot.img"
 
     echo -e "${YELLOW}- Patching vbmeta"
-    sudo bash "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta.img"
+    if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta.img" ]; then
+        sudo bash "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta.img"
+    fi
+    if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img" ]; then
+        sudo bash "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img"
+    fi
+    if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img" ]; then
+        sudo bash "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img"
+    fi
 
     echo -e "${YELLOW}- Zipping fastboot files"
     cd "${WORKSPACE}/${DEVICE}/images"
     zip -r "${WORKSPACE}/zip/${DEVICE}_fastboot.zip" .
     echo -e "${GREEN}- ${DEVICE}_fastboot.zip created successfully"
-
-    sudo rm -rf "${WORKSPACE}/${DEVICE}/images"
 }
 
 

@@ -75,6 +75,7 @@ if [ "$EXT4" = true ]; then
         sudo eval "$i"_size=$(du -sb "$WORKSPACE"/${DEVICE}/images/$partition.img | awk {'print $partition'})
         echo "$partition size:" $(eval echo \$${partition}_size)
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
+        df -h "$WORKSPACE/${DEVICE}/images"
         ls -l "$WORKSPACE/${DEVICE}/images"
     done
 else

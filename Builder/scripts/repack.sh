@@ -112,6 +112,11 @@ for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; d
 done
 "${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/${DEVICE}/images/super.img" || exit
 
+for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
+    if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
+        rm -rf "${WORKSPACE}/${DEVICE}/images/${pname}.img"
+    fi
+done
 
 prepare_device_directory() {
     echo -e "${YELLOW}- Downloading and preparing ${DEVICE} fastboot working directory"

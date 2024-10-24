@@ -90,13 +90,16 @@ else
             "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done
+        for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
+        if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
+            eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
+        fi
+    done
 fi
 
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
 
-
-# create super
 total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
 block_size=4096
 super_size=9126805504

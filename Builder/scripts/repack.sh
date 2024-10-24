@@ -73,6 +73,8 @@ if [ "$EXT4" = true ]; then
         sudo "$WORKSPACE/tools/make_ext4fs" -s -l "$(eval echo \$${partition}_size)" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
         sudo "$WORKSPACE/tools/resize2fs" -f -M "$WORKSPACE/${DEVICE}/images/$partition.img"
         eval "$i"_size=$(du -sb "$WORKSPACE"/${DEVICE}/images/$partition.img | awk {'print $partition'})
+        echo "$partition size:" "$i"_size
+        ls -l "$WORKSPACE/${DEVICE}/images"
         img_free
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done

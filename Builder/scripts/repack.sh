@@ -145,12 +145,17 @@ final_steps() {
         sudo "${WORKSPACE}/tools/vbmeta-disable-verification" --image "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img"
     fi
 
+    mkdir -p "${WORKSPACE}/zip/images"
+
+    cp "${WORKSPACE}/${DEVICE}/images"/* "${WORKSPACE}/zip/images/"
+
+    cd "${WORKSPACE}/zip" || exit
+
     echo -e "${YELLOW}- Zipping fastboot files"
-    cd "${WORKSPACE}/${DEVICE}/images"
-    zip -r "${WORKSPACE}/zip/${DEVICE}_fastboot.zip" .
+    zip -r "${WORKSPACE}/zip/${DEVICE}_fastboot.zip" . || true
     echo -e "${GREEN}- ${DEVICE}_fastboot.zip created successfully"
 }
-
+mkdir -p "${WORKSPACE}/zip"
 
 prepare_device_directory
 final_steps

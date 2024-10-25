@@ -63,6 +63,9 @@ jobs:
           echo "Device name: $device_name"
 
           echo "version=$(echo ${{ github.event.inputs.URL }} | cut -d"/" -f4)" >> $GITHUB_ENV
+          sudo apt install software-properties-common
+          sudo add-apt-repository universe
+          sudo apt update
           sudo apt-get install python3 aria2 p7zip-full zstd dos2unix e2fsprogs android-tools-fsutils
 
       - name: Download & Unpack

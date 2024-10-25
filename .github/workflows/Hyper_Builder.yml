@@ -88,18 +88,18 @@ jobs:
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/vendor.sh ${{ env.device }} $GITHUB_WORKSPACE
 
-#      - name: Clone smali repository
-#        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
+      - name: Clone smali repository
+        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
 
-#      - name: Build smali and baksmali
-#        run: |
-#          ls
-#          cd smali
-#          ./gradlew build
-#
-#      - name: Patch Framework
-#        run: |
-#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
+      - name: Build smali and baksmali
+        run: |
+          ls
+          cd smali
+          ./gradlew build
+
+      - name: Patch Framework
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
 
       - name: Patch Boot
         run: |

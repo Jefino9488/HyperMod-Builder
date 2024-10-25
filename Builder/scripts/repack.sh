@@ -37,8 +37,8 @@ if [ "$EXT4" = true ]; then
 
         sudo dd if=/dev/zero of="$WORKSPACE/${DEVICE}/images/$i.img" bs=1 count=0 seek="$size"
 
-        sudo "$WORKSPACE/tools/mkfs.ext4" "$WORKSPACE/${DEVICE}/images/$i.img"
-        sudo "$WORKSPACE/tools/tune2fs" -c 0 -i 0 "$WORKSPACE/${DEVICE}/images/$i.img"
+        sudo mkfs.ext4 "$WORKSPACE/${DEVICE}/images/$i.img"
+        sudo tune2fs -c 0 -i 0 "$WORKSPACE/${DEVICE}/images/$i.img"
 
         sudo mkdir -p /mnt/ext4_image
         sudo mount -o loop "$WORKSPACE/${DEVICE}/images/$i.img" /mnt/ext4_image

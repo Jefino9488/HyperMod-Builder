@@ -9,15 +9,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
 
-sudo chmod +x "${WORKSPACE}/tools/fspatch.py"
-sudo chmod +x "${WORKSPACE}/tools/contextpatch.py"
-sudo chmod +x "${WORKSPACE}/tools/e2fsdroid"
-sudo chmod +x "${WORKSPACE}/tools/mkfs.erofs"
-sudo chmod +x "${WORKSPACE}/tools/vbmeta-disable-verification"
-sudo chmod +x "${WORKSPACE}/tools/make_ext4fs"
-sudo chmod +x "${WORKSPACE}/tools/mke2fs"
-sudo chmod +x "${WORKSPACE}/tools/resize2fs"
-sudo chmod +x "${WORKSPACE}/tools/simg2img"
+sudo chmod +x "${WORKSPACE}/tools/"*
 
 echo -e "${YELLOW}- Repacking images"
 
@@ -29,20 +21,6 @@ else
     echo -e "${GREEN}- The device is not manufactured by QUALCOMM"
 fi
 if [ "$EXT4" = true ]; then
-    img_free() {
-        size_free="$(sudo tune2fs -l "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '/Free blocks:/ { print $3 }')"
-        size_free="$(echo "$size_free / 4096 * 1024 * 1024" | bc)"
-        if [[ $size_free -ge 1073741824 ]]; then
-          File_Type=$(awk "BEGIN{print $size_free/1073741824}")G
-        elif [[ $size_free -ge 1048576 ]]; then
-          File_Type=$(awk "BEGIN{print $size_free/1048576}")MB
-        elif [[ $size_free -ge 1024 ]]; then
-          File_Type=$(awk "BEGIN{print $size_free/1024}")kb
-        elif [[ $size_free -le 1024 ]]; then
-          File_Type=${size_free}b
-        fi
-        echo -e "\e[1;33m - ${i}.img Free Space: $File_Type \e[0m"
-    }
     for i in product system system_ext vendor; do
         size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$i" | awk '{print $1}')
 
@@ -53,38 +31,32 @@ if [ "$EXT4" = true ]; then
         else
             size=$(echo "$size_orig * 103 / 100 / 4096 * 4096" | bc)
         fi
-
-        eval "$i"_size=$size
-        export "${i}_size"
+        export "${i}_size=$size"
     done
     for i in odm odm_dlkm vendor_dlkm mi_ext; do
         if [ -f "$WORKSPACE/${DEVICE}/images/${i}.img" ]; then
             size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '{print $1}')
-            eval "${i}_size=$size_orig"
-            export "${i}_size"
+            export "${i}_size=$size_orig"
         fi
-    done
-
-    for i in product system system_ext vendor; do
-        mkdir -p "$WORKSPACE/${DEVICE}/images/$i/lost+found"
-        sudo touch -t 202101010000 "$WORKSPACE/${DEVICE}/images/$i/lost+found"
     done
 
     for partition in product system system_ext vendor; do
         sudo python3 "$WORKSPACE/tools/fspatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config"
         sudo python3 "$WORKSPACE/tools/contextpatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts"
 
-        partition_inode=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config")
-        partition_inode=$(echo "$partition_inode + 8" | bc)
+        partition_inode=$(($(wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config") + 8))
 
-        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "$(eval echo \$${partition}_size)" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
-        sudo "$WORKSPACE/tools/resize2fs" -f -M "$WORKSPACE/${DEVICE}/images/$partition.img"
-        sudo eval "$i"_size=$(du -sb "$WORKSPACE"/${DEVICE}/images/$partition.img | awk {'print $partition'})
-        echo "$partition size:" $(eval echo \$${partition}_size)
+        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "${!partition}_size" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
+
+        partition_size=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$partition.img" | awk '{print $1}')
+        export "${partition}_size=$partition_size"
+        echo "$partition size: ${!partition}_size"
+
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
-        df -h "$WORKSPACE/${DEVICE}/images"
-        ls -l "$WORKSPACE/${DEVICE}/images"
     done
+
+    df -h "$WORKSPACE/${DEVICE}/images"
+    ls -l "$WORKSPACE/${DEVICE}/images"
 else
     for partition in product system system_ext vendor; do
         sudo python3 "$WORKSPACE/tools/fspatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config"

@@ -48,7 +48,7 @@ if [ "$EXT4" = true ]; then
 
         partition_inode=$(($(wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config") + 8))
 
-        sudo "$WORKSPACE/tools/dd" if=/dev/zero of="$WORKSPACE/${DEVICE}/images/$partition.img" bs=1M count=$(($size / 1048576))
+        sudo dd if=/dev/zero of="$WORKSPACE/${DEVICE}/images/$partition.img" bs=1M count=$(($size / 1048576))
 
         sudo "$WORKSPACE/tools/mke2fs" -t ext4 -L "$partition" "$WORKSPACE/${DEVICE}/images/$partition.img"
 

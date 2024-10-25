@@ -22,48 +22,36 @@ else
 fi
 if [ "$EXT4" = true ]; then
     for i in product system system_ext vendor; do
+        if [ ! -d "$WORKSPACE/${DEVICE}/images/$i" ]; then
+            echo "Directory $WORKSPACE/${DEVICE}/images/$i does not exist, skipping."
+            continue
+        fi
+
         size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$i" | awk '{print $1}')
-
-        if [[ "$size_orig" -lt "104857600" ]]; then
-            size=$(echo "$size_orig * 15 / 10 / 4096 * 4096" | bc)
-        elif [[ "$size_orig" -lt "1073741824" ]]; then
-            size=$(echo "$size_orig * 108 / 100 / 4096 * 4096" | bc)
+        if [[ "$size_orig" -gt 0 ]]; then
+            size=$(echo "$size_orig + 104857600" | bc)  # Add 100 MB buffer
         else
-            size=$(echo "$size_orig * 103 / 100 / 4096 * 4096" | bc)
+            echo "Original size for $i is zero, skipping."
+            continue
         fi
 
-        declare "${i}_size=$size"
-    done
+        sudo dd if=/dev/zero of="$WORKSPACE/${DEVICE}/images/$i.img" bs=1 count=0 seek="$size"
 
-    for i in odm odm_dlkm vendor_dlkm mi_ext; do
-        if [ -f "$WORKSPACE/${DEVICE}/images/${i}.img" ]; then
-            size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '{print $1}')
-            declare "${i}_size=$size_orig"
-        fi
-    done
-
-    for partition in product system system_ext vendor; do
-        sudo python3 "$WORKSPACE/tools/fspatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config"
-        sudo python3 "$WORKSPACE/tools/contextpatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts"
-
-        partition_inode=$(($(wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config") + 8))
-
-        sudo dd if=/dev/zero of="$WORKSPACE/${DEVICE}/images/$partition.img" bs=1M count=$(($size / 1048576))
-
-        sudo "$WORKSPACE/tools/mke2fs" -t ext4 -L "$partition" "$WORKSPACE/${DEVICE}/images/$partition.img"
+        sudo "$WORKSPACE/tools/mkfs.ext4" "$WORKSPACE/${DEVICE}/images/$i.img"
+        sudo "$WORKSPACE/tools/tune2fs" -c 0 -i 0 "$WORKSPACE/${DEVICE}/images/$i.img"
 
         sudo mkdir -p /mnt/ext4_image
-        sudo mount -o loop "$WORKSPACE/${DEVICE}/images/$partition.img" /mnt/ext4_image
+        sudo mount -o loop "$WORKSPACE/${DEVICE}/images/$i.img" /mnt/ext4_image
 
-        sudo cp -r "$WORKSPACE/${DEVICE}/images/$partition/"* /mnt/ext4_image/
+        sudo cp -r "$WORKSPACE/${DEVICE}/images/$i/"* /mnt/ext4_image/
+        sudo sync
 
         sudo umount /mnt/ext4_image
 
-        partition_size=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$partition.img" | awk '{print $1}')
-        declare "${partition}_size=$partition_size"
-        echo "$partition size: ${!partition_size}"
+        partition_size=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$i.img" | awk '{print $1}')
+        echo "$i image created with size: $partition_size bytes."
 
-        sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
+        sudo rm -rf "$WORKSPACE/${DEVICE}/images/$i"
     done
 
     df -h "$WORKSPACE/${DEVICE}/images"

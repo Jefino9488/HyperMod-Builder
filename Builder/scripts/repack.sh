@@ -35,7 +35,7 @@ if [[ "$EXT4" == true ]]; then
       echo -e "\e[1;33m - ${i}.img free: $File_Type \e[0m"
     }
 
-    for i in mi_ext odm product system system_ext vendor vendor_dlkm; do
+    for i in product system system_ext vendor; do
       eval "${i}_size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}" | awk '{print $1}')"
       if [[ "$(eval echo "\${${i}_size_orig}")" -lt 104857600 ]]; then
         size=$(echo "$(eval echo "\${${i}_size_orig}") * 15 / 10 / 4096 * 4096" | bc)
@@ -78,13 +78,12 @@ else
             "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done
-    for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
-        if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
-            eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
-        fi
-    done
 fi
-
+for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
+    if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
+        eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
+    fi
+done
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
 

@@ -32,11 +32,11 @@ if [[ "$EXT4" == true ]]; then
       else
         File_Type="${size_free} KB"
       fi
-      echo -e "\e[1;33m - ${i}.img 剩余空间: $File_Type \e[0m"
+      echo -e "\e[1;33m - ${i}.img free: $File_Type \e[0m"
     }
 
     for i in mi_ext odm product system system_ext vendor vendor_dlkm; do
-      eval "${i}_size_orig=$(sudo du -sb "$GITHUB_WORKSPACE/images/$i" | awk '{print $1}')"
+      eval "${i}_size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}" | awk '{print $1}')"
       if [[ "$(eval echo "\${${i}_size_orig}")" -lt 104857600 ]]; then
         size=$(echo "$(eval echo "\${${i}_size_orig}") * 15 / 10 / 4096 * 4096" | bc)
       elif [[ "$(eval echo "\${${i}_size_orig}")" -lt 1073741824 ]]; then

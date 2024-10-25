@@ -10,7 +10,8 @@ BLUE='\033[1;34m'
 GREEN='\033[1;32m'
 
 sudo chmod +x "${WORKSPACE}/tools/"*
-
+chmod +x "$GITHUB_WORKSPACE/tools/e2fsdroid"
+file "$GITHUB_WORKSPACE/tools/e2fsdroid"
 echo -e "${YELLOW}- Repacking images"
 
 if grep -q "ro.product.product.manufacturer=QUALCOMM" "$WORKSPACE/${DEVICE}/images/product/etc/build.prop"; then

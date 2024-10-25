@@ -31,12 +31,13 @@ if [ "$EXT4" = true ]; then
         else
             size=$(echo "$size_orig * 103 / 100 / 4096 * 4096" | bc)
         fi
-        export "${i}_size=$size"
+
+        declare "${i}_size=$size"
     done
     for i in odm odm_dlkm vendor_dlkm mi_ext; do
         if [ -f "$WORKSPACE/${DEVICE}/images/${i}.img" ]; then
             size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '{print $1}')
-            export "${i}_size=$size_orig"
+            declare "${i}_size=$size_orig"
         fi
     done
 
@@ -46,11 +47,12 @@ if [ "$EXT4" = true ]; then
 
         partition_inode=$(($(wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config") + 8))
 
-        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "${!partition}_size" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
+        partition_size="${partition}_size"
+        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "${!partition_size}" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
 
         partition_size=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$partition.img" | awk '{print $1}')
-        export "${partition}_size=$partition_size"
-        echo "$partition size: ${!partition}_size"
+        declare "${partition}_size=$partition_size"
+        echo "$partition size: ${!partition_size}"
 
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done

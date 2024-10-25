@@ -30,8 +30,7 @@ if [ "$EXT4" = true ]; then
         fs_config="$WORKSPACE/${DEVICE}/images/${i}_fs_config"
         file_contexts="$WORKSPACE/${DEVICE}/images/${i}_file_contexts"
 
-        sudo e2fsdroid -v -T 0 -S "$file_contexts" -C "$fs_config" -a "/$i" \
-            -s "$WORKSPACE/${DEVICE}/images/$i.img" "$WORKSPACE/${DEVICE}/images/$i"
+        sudo e2fsdroid -v -T 0 -S "$file_contexts" -C "$fs_config" -a "/$i" -s "$WORKSPACE/${DEVICE}/images/$i.img" "$WORKSPACE/${DEVICE}/images/$i"
 
         if [ $? -eq 0 ]; then
             echo "$i image created successfully with e2fsdroid."

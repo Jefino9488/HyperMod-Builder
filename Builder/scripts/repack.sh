@@ -34,6 +34,7 @@ if [ "$EXT4" = true ]; then
 
         declare "${i}_size=$size"
     done
+
     for i in odm odm_dlkm vendor_dlkm mi_ext; do
         if [ -f "$WORKSPACE/${DEVICE}/images/${i}.img" ]; then
             size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '{print $1}')
@@ -47,8 +48,16 @@ if [ "$EXT4" = true ]; then
 
         partition_inode=$(($(wc -l < "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config") + 8))
 
-        partition_size="${partition}_size"
-        sudo "$WORKSPACE/tools/make_ext4fs" -s -l "${!partition_size}" -b 4096 -i "$partition_inode" -I 256 -L "$partition" -a "$partition" -C "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${partition}_file_contexts" "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
+        sudo "$WORKSPACE/tools/dd" if=/dev/zero of="$WORKSPACE/${DEVICE}/images/$partition.img" bs=1M count=$(($size / 1048576))
+
+        sudo "$WORKSPACE/tools/mke2fs" -t ext4 -L "$partition" "$WORKSPACE/${DEVICE}/images/$partition.img"
+
+        sudo mkdir -p /mnt/ext4_image
+        sudo mount -o loop "$WORKSPACE/${DEVICE}/images/$partition.img" /mnt/ext4_image
+
+        sudo cp -r "$WORKSPACE/${DEVICE}/images/$partition/"* /mnt/ext4_image/
+
+        sudo umount /mnt/ext4_image
 
         partition_size=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$partition.img" | awk '{print $1}')
         declare "${partition}_size=$partition_size"

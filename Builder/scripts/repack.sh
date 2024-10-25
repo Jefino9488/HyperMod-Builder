@@ -20,6 +20,14 @@ sudo chmod +x "${WORKSPACE}/tools/resize2fs"
 sudo chmod +x "${WORKSPACE}/tools/simg2img"
 
 echo -e "${YELLOW}- Repacking images"
+
+if grep -q "ro.product.product.manufacturer=QUALCOMM" "$WORKSPACE/${DEVICE}/images/product/etc/build.prop"; then
+    group_name="qti_dynamic_partitions"
+    echo -e "${GREEN}- The device is manufactured by QUALCOMM"
+else
+    group_name="main"
+    echo -e "${GREEN}- The device is not manufactured by QUALCOMM"
+fi
 if [ "$EXT4" = true ]; then
     img_free() {
         size_free="$(sudo tune2fs -l "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '/Free blocks:/ { print $3 }')"
@@ -101,13 +109,24 @@ echo -e "${GREEN}- All partitions repacked"
 
 total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
 block_size=4096
-super_size=9126805504
-lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device super:${super_size} --group main_a:${super_size} --group main_b:${super_size}"
+case ${DEVICE} in
+	#13 13Pro 13Ultra
+	FUXI | NUWA | ISHTAR) super_size=9663676416;;
+	#RedmiNote12Turbo | K60Pro | MIXFold
+	MARBLE | SOCRATES | BABYLON) super_size=9663676416;;
+	#Redmi Note 12 5G
+	SUNSTONE) super_size=9122611200;;
+	#PAD6Max
+	YUDI) super_size=11811160064;;
+	#Others
+	*) super_size=9126805504;;
+esac
+lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device super:${super_size} --group ${group_name}_a:${super_size} --group ${group_name}_b:${super_size}"
 for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
         eval subsize="\$${pname}_size"
         echo -e "${GREEN}Super sub-partition [$pname] size: [$subsize]"
-        lpargs="$lpargs --partition ${pname}_a:readonly:${subsize}:main_a --image ${pname}_a=${WORKSPACE}/${DEVICE}/images/${pname}.img --partition ${pname}_b:readonly:0:main_b"
+        lpargs="$lpargs --partition ${pname}_a:readonly:${subsize}:${group_name}_a --image ${pname}_a=${WORKSPACE}/${DEVICE}/images/${pname}.img --partition ${pname}_b:readonly:0:${group_name}_b"
     fi
 done
 "${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/${DEVICE}/images/super.img" || exit

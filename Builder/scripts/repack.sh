@@ -27,29 +27,17 @@ if [ "$EXT4" = true ]; then
             continue
         fi
 
-        size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$i" | awk '{print $1}')
-        if [[ "$size_orig" -gt 0 ]]; then
-            size=$(echo "$size_orig + 104857600" | bc)  # Add 100 MB buffer
+        fs_config="$WORKSPACE/${DEVICE}/images/${i}_fs_config"
+        file_contexts="$WORKSPACE/${DEVICE}/images/${i}_file_contexts"
+
+        sudo e2fsdroid -v -T 0 -S "$file_contexts" -C "$fs_config" -a "/$i" \
+            -s "$WORKSPACE/${DEVICE}/images/$i.img" "$WORKSPACE/${DEVICE}/images/$i"
+
+        if [ $? -eq 0 ]; then
+            echo "$i image created successfully with e2fsdroid."
         else
-            echo "Original size for $i is zero, skipping."
-            continue
+            echo "Failed to create $i image with e2fsdroid."
         fi
-
-        sudo dd if=/dev/zero of="$WORKSPACE/${DEVICE}/images/$i.img" bs=1 count=0 seek="$size"
-
-        sudo mkfs.ext4 "$WORKSPACE/${DEVICE}/images/$i.img"
-        sudo tune2fs -c 0 -i 0 "$WORKSPACE/${DEVICE}/images/$i.img"
-
-        sudo mkdir -p /mnt/ext4_image
-        sudo mount -o loop "$WORKSPACE/${DEVICE}/images/$i.img" /mnt/ext4_image
-
-        sudo cp -r "$WORKSPACE/${DEVICE}/images/$i/"* /mnt/ext4_image/
-        sudo sync
-
-        sudo umount /mnt/ext4_image
-
-        partition_size=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/$i.img" | awk '{print $1}')
-        echo "$i image created with size: $partition_size bytes."
 
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$i"
     done

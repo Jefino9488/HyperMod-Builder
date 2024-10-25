@@ -21,24 +21,46 @@ else
     group_name="main"
     echo -e "${GREEN}- The device is not manufactured by QUALCOMM"
 fi
-if [ "$EXT4" = true ]; then
+if [[ "$EXT4" == true ]]; then
+    img_free() {
+      size_free="$(tune2fs -l "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '/Free blocks:/ { print $3 }')"
+      size_free="$(echo "$size_free * 4096 / 1024 / 1024" | bc)"
+      if [[ $size_free -ge 1048576 ]]; then
+        File_Type="$(awk "BEGIN{print $size_free/1048576}") GB"
+      elif [[ $size_free -ge 1024 ]]; then
+        File_Type="$(awk "BEGIN{print $size_free/1024}") MB"
+      else
+        File_Type="${size_free} KB"
+      fi
+      echo -e "\e[1;33m - ${i}.img 剩余空间: $File_Type \e[0m"
+    }
+
+    for i in mi_ext odm product system system_ext vendor vendor_dlkm; do
+      eval "${i}_size_orig=$(sudo du -sb "$GITHUB_WORKSPACE/images/$i" | awk '{print $1}')"
+      if [[ "$(eval echo "\${${i}_size_orig}")" -lt 104857600 ]]; then
+        size=$(echo "$(eval echo "\${${i}_size_orig}") * 15 / 10 / 4096 * 4096" | bc)
+      elif [[ "$(eval echo "\${${i}_size_orig}")" -lt 1073741824 ]]; then
+        size=$(echo "$(eval echo "\${${i}_size_orig}") * 108 / 100 / 4096 * 4096" | bc)
+      else
+        size=$(echo "$(eval echo "\${${i}_size_orig}") * 103 / 100 / 4096 * 4096" | bc)
+      fi
+      eval "${i}_size=$(echo "$size * 4096 / 4096 / 4096" | bc)"
+    done
+
     for i in product system system_ext vendor; do
-        if [ ! -d "$WORKSPACE/${DEVICE}/images/$i" ]; then
+        if [[ ! -d "$WORKSPACE/${DEVICE}/images/$i" ]]; then
             echo "Directory $WORKSPACE/${DEVICE}/images/$i does not exist, skipping."
             continue
         fi
 
-        fs_config="$WORKSPACE/${DEVICE}/images/${i}_fs_config"
-        file_contexts="$WORKSPACE/${DEVICE}/images/${i}_file_contexts"
+        eval "${i}_inode=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${i}_fs_config")"
+        eval "${i}_inode=$(echo "$(eval echo "\${${i}_inode}") + 8" | bc)"
 
-        sudo "$WORKSPACE/tools/e2fsdroid" -T 0 -S "$file_contexts" -C "$fs_config" -a "/$i" -s "$WORKSPACE/${DEVICE}/images/$i.img" "$WORKSPACE/${DEVICE}/images/$i"
-
-        if [ $? -eq 0 ]; then
-            echo "$i image created successfully with e2fsdroid."
-        else
-            echo "Failed to create $i image with e2fsdroid."
-        fi
-
+        sudo "$WORKSPACE/tools/mke2fs" -O ^has_journal -L $i -I 256 -N "$(eval echo "\${${i}_inode}")" -M /$i -m 0 -t ext4 -b 4096 "$WORKSPACE/${DEVICE}/images/${i}.img" "$(eval echo "\${${i}_size}")" || false
+        sudo "$WORKSPACE/tools/e2fsdroid" -e -T 1230768000 -C "$WORKSPACE/${DEVICE}/images/config/${i}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${i}_file_contexts" -f "$WORKSPACE/${DEVICE}/images/$i" -a /$i "$WORKSPACE/${DEVICE}/images/$i.img" || false
+        resize2fs -f -M "$WORKSPACE/${DEVICE}/images/$i.img"
+        eval "${i}_size=$(du -sb "$WORKSPACE/${DEVICE}/images/$i.img" | awk '{print $1}')"
+        img_free
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$i"
     done
 

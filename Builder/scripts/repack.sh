@@ -117,44 +117,38 @@ for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; d
     fi
 done
 
-prepare_device_directory() {
-    echo -e "${YELLOW}- Downloading and preparing ${DEVICE} fastboot working directory"
+echo -e "${YELLOW}- Downloading and preparing ${DEVICE} fastboot working directory"
 
-    LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/Jefino9488/Fastboot-Flasher/releases/latest | grep "browser_download_url.*zip" | cut -d '"' -f 4)
-    aria2c -x16 -j"$(nproc)" -U "Mozilla/5.0" -o "fastboot_flasher_latest.zip" "${LATEST_RELEASE_URL}"
-
-    unzip -q "fastboot_flasher_latest.zip" -d "${WORKSPACE}/zip"
-
-    rm "fastboot_flasher_latest.zip"
-
-    echo -e "${BLUE}- Downloaded and prepared ${DEVICE} fastboot working directory"
-}
-
-final_steps() {
-    mv "${WORKSPACE}/magisk/new-boot.img" "${WORKSPACE}/${DEVICE}/images/magisk_boot.img"
-
-    echo -e "${YELLOW}- Patching vbmeta"
-    if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta.img" ]; then
-        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta.img"
-    fi
-    if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img" ]; then
-        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img"
-    fi
-    if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img" ]; then
-        sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img"
-    fi
-
-    mkdir -p "${WORKSPACE}/zip/images"
-
-    cp "${WORKSPACE}/${DEVICE}/images"/* "${WORKSPACE}/zip/images/"
-
-    cd "${WORKSPACE}/zip" || exit
-
-    echo -e "${YELLOW}- Zipping fastboot files"
-    zip -r "${WORKSPACE}/zip/${DEVICE}_fastboot.zip" . || true
-    echo -e "${GREEN}- ${DEVICE}_fastboot.zip created successfully"
-}
 mkdir -p "${WORKSPACE}/zip"
 
-prepare_device_directory
-final_steps
+LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/Jefino9488/Fastboot-Flasher/releases/latest | grep "browser_download_url.*zip" | cut -d '"' -f 4)
+aria2c -x16 -j"$(nproc)" -U "Mozilla/5.0" -o "fastboot_flasher_latest.zip" "${LATEST_RELEASE_URL}"
+
+unzip -q "fastboot_flasher_latest.zip" -d "${WORKSPACE}/zip"
+
+rm "fastboot_flasher_latest.zip"
+
+echo -e "${BLUE}- Downloaded and prepared ${DEVICE} fastboot working directory"
+
+mv "${WORKSPACE}/magisk/new-boot.img" "${WORKSPACE}/${DEVICE}/images/magisk_boot.img"
+
+echo -e "${YELLOW}- Patching vbmeta"
+if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta.img" ]; then
+    sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta.img"
+fi
+if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img" ]; then
+    sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta_system.img"
+fi
+if [ -f "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img" ]; then
+    sudo "${WORKSPACE}/tools/vbmeta-disable-verification" "${WORKSPACE}/${DEVICE}/images/vbmeta_vendor.img"
+fi
+
+mkdir -p "${WORKSPACE}/zip/images"
+
+cp "${WORKSPACE}/${DEVICE}/images"/* "${WORKSPACE}/zip/images/"
+
+cd "${WORKSPACE}/zip" || exit
+
+echo -e "${YELLOW}- Zipping fastboot files"
+7z a -tzip "${WORKSPACE}/zip/${DEVICE}_fastboot.zip" . || true
+echo -e "${GREEN}- ${DEVICE}_fastboot.zip created successfully"

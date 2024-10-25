@@ -78,7 +78,7 @@ else
             "$WORKSPACE/${DEVICE}/images/$partition.img" "$WORKSPACE/${DEVICE}/images/$partition"
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done
-        for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
+    for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
         if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
             eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
         fi

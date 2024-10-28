@@ -23,16 +23,17 @@ for dir in "${dirs[@]}"; do
 done
 
 if [[ "$EXT4" == true ]]; then
-  if [ -f "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.default" ]; then
-    echo -e "${YELLOW}- patching fstab.default"
-    sudo sed -i "/overlay/d" "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.default"
-    echo -e "${GREEN}fstab.default patched"
-  fi
-  if [ -f "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.emmc" ]; then
-    echo -e "${YELLOW}- patching fstab.emmc"
-    sudo sed -i "/overlay/d" "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.emmc"
-    echo -e "${GREEN}fstab.emmc patched"
-  fi
+  for fstab_file in "${WORKSPACE}/${DEVICE}/images/vendor/etc/"fstab.*; do
+    if [[ "$fstab_file" =~ charger_fw_fstab\.qti|charger_fstab\.qti|fstab\.enableswap ]]; then
+      continue
+    fi
+    if [[ "$fstab_file" =~ fstab\.default|fstab\.emmc|fstab\.mt[0-9]+ ]]; then
+      echo -e "${YELLOW}- Patching ${fstab_file}"
+      sudo sed -i "/overlay/d" "$fstab_file"
+      echo -e "${GREEN}${fstab_file} patched"
+    fi
+  done
 fi
+
 
 echo -e "${BLUE}- modified vendor"

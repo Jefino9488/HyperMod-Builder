@@ -45,6 +45,8 @@ if [[ "$EXT4" == true ]]; then
         size=$(echo "$(eval echo "\${${i}_size_orig}") * 103 / 100 / 4096 * 4096" | bc)
       fi
       eval "${i}_size=$(echo "$size * 4096 / 4096 / 4096" | bc)"
+      mkdir -p "$WORKSPACE/${DEVICE}/images/$i"/lost+found
+      sudo "$workspace/${DEVICE}/images/$i"/lost+found
     done
 
     for i in product system system_ext vendor; do
@@ -89,18 +91,10 @@ echo -e "${GREEN}- All partitions repacked"
 
 total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
 block_size=4096
-case ${DEVICE} in
-	#13 13Pro 13Ultra
-	FUXI | NUWA | ISHTAR) super_size=9663676416;;
-	#RedmiNote12Turbo | K60Pro | MIXFold
-	MARBLE | SOCRATES | BABYLON) super_size=9663676416;;
-	#Redmi Note 12 5G
-	SUNSTONE) super_size=9122611200;;
-	#PAD6Max
-	YUDI) super_size=11811160064;;
-	#Others
-	*) super_size=9126805504;;
-esac
+super_size=$(( total_size * 2 ))
+if (( super_size % block_size != 0 )); then
+    super_size=$(( (super_size / block_size + 1) * block_size ))
+fi
 lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device super:${super_size} --group ${group_name}_a:${super_size} --group ${group_name}_b:${super_size}"
 for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then

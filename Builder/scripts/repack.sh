@@ -110,7 +110,7 @@ if (( total_size % block_size != 0 )); then
     total_size=$(( total_size + block_size - (total_size % block_size) ))
 fi
 
-lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --group ${group_name}_a:${total_size} --group ${group_name}_b:${total_size}"
+lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device-size auto --group ${group_name}_a:${total_size} --group ${group_name}_b:${total_size}"
 for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
         eval subsize="\$${pname}_size"

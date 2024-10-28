@@ -16,6 +16,4 @@
 - Added `Magisk Boot Image`
 - Disabled `dm-verity`
 - Installer `linux`, `windows`
-- Build `erofs`
-- RW `no`
 ###### Initial Build

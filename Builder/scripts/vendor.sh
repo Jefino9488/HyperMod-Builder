@@ -24,16 +24,15 @@ done
 
 if [[ "$EXT4" == true ]]; then
   if [ -f "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.default" ]; then
+    echo -e "${YELLOW}- patching fstab.default"
     sudo sed -i "/overlay/d" "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.default"
-    cat "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.default"
+    echo -e "${GREEN}fstab.default patched"
   fi
   if [ -f "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.emmc" ]; then
+    echo -e "${YELLOW}- patching fstab.emmc"
     sudo sed -i "/overlay/d" "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.emmc"
-    cat "${WORKSPACE}/${DEVICE}/images/vendor/etc/fstab.emmc"
+    echo -e "${GREEN}fstab.emmc patched"
   fi
 fi
-
-ls -alh "${WORKSPACE}/${DEVICE}/images/vendor/etc/"
-ls -alh "${WORKSPACE}/${DEVICE}/images/vendor/app/"
 
 echo -e "${BLUE}- modified vendor"

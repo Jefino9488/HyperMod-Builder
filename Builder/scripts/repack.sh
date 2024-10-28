@@ -45,8 +45,6 @@ if [[ "$EXT4" == true ]]; then
         size=$(echo "$(eval echo "\${${i}_size_orig}") * 103 / 100 / 4096 * 4096" | bc)
       fi
       eval "${i}_size=$(echo "$size * 4096 / 4096 / 4096" | bc)"
-      mkdir -p "$WORKSPACE/${DEVICE}/images/$i"/lost+found
-      sudo "$workspace/${DEVICE}/images/$i"/lost+found
     done
 
     for i in product system system_ext vendor; do
@@ -142,9 +140,9 @@ fi
 
 mkdir -p "${WORKSPACE}/zip/images"
 
-touch "${WORKSPACE}/zip/compatable_list.txt"
+touch "${WORKSPACE}/zip/compatible_list.txt"
 
-echo "${DEVICE,,}" >> "${WORKSPACE}/zip/compatable_list.txt"
+echo "${DEVICE,,}" >> "${WORKSPACE}/zip/compatible_list.txt"
 
 cp "${WORKSPACE}/${DEVICE}/images"/* "${WORKSPACE}/zip/images/"
 

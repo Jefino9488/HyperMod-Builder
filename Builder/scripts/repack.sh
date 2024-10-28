@@ -142,7 +142,13 @@ fi
 
 mkdir -p "${WORKSPACE}/zip/images"
 
+touch "${WORKSPACE}/zip/compatable_list.txt"
+
+echo "${DEVICE,,}" >> "${WORKSPACE}/zip/compatable_list.txt"
+
 cp "${WORKSPACE}/${DEVICE}/images"/* "${WORKSPACE}/zip/images/"
+
+cat "${WORKSPACE}/zip/compatible_list.txt"
 
 cd "${WORKSPACE}/zip" || exit
 

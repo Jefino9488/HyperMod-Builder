@@ -19,7 +19,7 @@ if grep -q "ro.product.product.manufacturer=QUALCOMM" "$WORKSPACE/${DEVICE}/imag
     echo -e "${GREEN}- The device is manufactured by QUALCOMM"
 else
     group_name="main"
-    echo -e "${GREEN}- The device is not manufactured by QUALCOMM"
+    echo -e "${GREEN}- The device is manufactured by MEDIATEK"
 fi
 if [[ "$EXT4" == true ]]; then
     img_free() {
@@ -91,18 +91,6 @@ echo -e "${GREEN}- All partitions repacked"
 
 total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
 block_size=4096
-case ${DEVICE} in
-	#13 13Pro 13Ultra
-	FUXI | NUWA | ISHTAR) super_size=9663676416;;
-	#RedmiNote12Turbo | K60Pro | MIXFold
-	MARBLE | SOCRATES | BABYLON) super_size=9663676416;;
-	#Redmi Note 12 5G
-	SUNSTONE) super_size=9122611200;;
-	#PAD6Max
-	YUDI) super_size=11811160064;;
-	#Others
-	*) super_size=9126805504;;
-esac
 
 total_size=$(( total_size + 524288 ))
 

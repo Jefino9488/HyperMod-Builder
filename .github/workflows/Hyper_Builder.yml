@@ -88,18 +88,18 @@ jobs:
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/vendor.sh ${{ env.device }} $GITHUB_WORKSPACE
 
-#      - name: Clone smali repository
-#        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
-#
-#      - name: Build smali and baksmali
-#        run: |
-#          ls
-#          cd smali
-#          ./gradlew build
-#
-#      - name: Patch Framework
-#        run: |
-#          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
+      - name: Clone smali repository
+        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
+
+      - name: Build smali and baksmali
+        run: |
+          ls
+          cd smali
+          ./gradlew build
+
+      - name: Patch Framework
+        run: |
+          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
 
       - name: Patch Boot
         run: |
@@ -114,33 +114,33 @@ jobs:
           sudo mv ${{ github.workspace }}/zip/${{ env.device }}_fastboot.zip ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/upload.sh ${{ github.workspace }}/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip $GITHUB_ENV
 
-#      - name: release split & info
-#        run: |
-#          mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
-#          unzip -j "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
-#          cd "$GITHUB_WORKSPACE"
-#          touch new_changelog.md
-#          echo -e "# [HyperMod v1.0.0]()\n\n" >> new_changelog.md
-#          echo -e "##   TEST Build INFO\n\n- Device: ${{ env.device }}\n- Version: ${{ env.version }}\n- Region: ${{ github.event.inputs.region }}\n- Core Patch: ${{ github.event.inputs.core }}" >> new_changelog.md
-#          echo -e "\n\n## Download Link\n\n- [Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})" >> new_changelog.md
-#          if [ -f changelog.md ]; then
-#            cat changelog.md >> new_changelog.md
-#          fi
-#
-#      - name: Upload Release
-#        uses: ncipollo/release-action@v1
-#        with:
-#          artifacts: ${{ github.workspace }}/GithubRelease/*
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#          name: ${{ env.device }}_HyperMod
-#          tag: ${{ env.device }}_${{ env.version }}
-#          bodyFile: ${{ github.workspace }}/new_changelog.md
-#          allowUpdates: true
-#          makeLatest: true
-#
-#      - name: Notify via Telegram
-#        run: |
-#          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
-#          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-#          -d parse_mode="MarkdownV2" \
-#          -d text="* Test Build \*%0A%0A*Device:* \`${{ env.device }}\`%0A*Version:* \`${{ env.version }}\`%0A*Region:* \`${{ github.event.inputs.region }}\`%0A*Core Patch:* \`${{ github.event.inputs.core }}\`%0A%0A[Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})"
+      - name: release split & info
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/GithubRelease"
+          unzip -j "$GITHUB_WORKSPACE/zip/${{ env.device }}${{ env.version }}-HyperMod-fastboot.zip" "images/boot.img" "images/magisk_boot.img" -d "$GITHUB_WORKSPACE/GithubRelease"
+          cd "$GITHUB_WORKSPACE"
+          touch new_changelog.md
+          echo -e "# [HyperMod v1.0.0]()\n\n" >> new_changelog.md
+          echo -e "##   TEST Build INFO\n\n- Device: ${{ env.device }}\n- Version: ${{ env.version }}\n- Region: ${{ github.event.inputs.region }}\n- Core Patch: ${{ github.event.inputs.core }}" >> new_changelog.md
+          echo -e "\n\n## Download Link\n\n- [Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})" >> new_changelog.md
+          if [ -f changelog.md ]; then
+            cat changelog.md >> new_changelog.md
+          fi
+
+      - name: Upload Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ${{ github.workspace }}/GithubRelease/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ env.device }}_HyperMod
+          tag: ${{ env.device }}_${{ env.version }}
+          bodyFile: ${{ github.workspace }}/new_changelog.md
+          allowUpdates: true
+          makeLatest: true
+
+      - name: Notify via Telegram
+        run: |
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage \
+          -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+          -d parse_mode="MarkdownV2" \
+          -d text="* Test Build \*%0A%0A*Device:* \`${{ env.device }}\`%0A*Version:* \`${{ env.version }}\`%0A*Region:* \`${{ github.event.inputs.region }}\`%0A*Core Patch:* \`${{ github.event.inputs.core }}\`%0A%0A[Download Fastboot ZIP](${{ env.DOWNLOAD_LINK }})"

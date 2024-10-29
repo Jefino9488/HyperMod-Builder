@@ -55,9 +55,6 @@ if [ "$REGION" == "CN" ]; then
   mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
   mv "${WORKSPACE}/Builder/apps/gboard.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/"
   mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.google.android.inputmethod.latin.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
-  chmod 755 "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
-  chmod 644 "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/gboard.apk"
-  chmod 644 "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/privapp_whitelist_com.google.android.inputmethod.latin.xml"
   echo -e "${GREEN}Gboard added"
 #  mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore"
 #  mv "${WORKSPACE}/Builder/apps/playstore.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore/"
@@ -86,7 +83,6 @@ fi
 
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/data-app/"
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/app/"
-ls -alh "${WORKSPACE}/${DEVICE}/images/product/app/gboard/"
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/priv-app/"
 echo -e "${BLUE}- modified product"

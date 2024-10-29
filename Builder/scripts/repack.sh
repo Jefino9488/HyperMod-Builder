@@ -52,7 +52,8 @@ if [[ "$EXT4" == true ]]; then
             echo "Directory $WORKSPACE/${DEVICE}/images/$i does not exist, skipping."
             continue
         fi
-
+        sudo python3 "$WORKSPACE/tools/fspatch.py" "$WORKSPACE/${DEVICE}/images/$i" "$WORKSPACE/${DEVICE}/images/config/${i}_fs_config"
+        sudo python3 "$WORKSPACE/tools/contextpatch.py" "$WORKSPACE/${DEVICE}/images/$i" "$WORKSPACE/${DEVICE}/images/config/${i}_file_contexts"
         eval "${i}_inode=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${i}_fs_config")"
         eval "${i}_inode=$(echo "$(eval echo "\${${i}_inode}") + 8" | bc)"
 

@@ -11,13 +11,19 @@ GREEN='\033[1;32m'
 echo -e "${YELLOW}- modifying product"
 
 if [ "$REGION" == "CN" ]; then
-  unwanted_files=("MIUIPersonalAssistantPhoneMIUI15" "AnalyticsCore" "GooglePlayServicesUpdater" "PaymentService" "MIpay" "XiaoaiEdgeEngine" "MIUIAiasstService" "MIUIGuardProvider" "MINextpay" "MiGameService_MTK" "AiAsstVision" "CarWith" "MIUISuperMarket" "MIUIgreenguard" "VoiceAssistAndroidT" "XiaoaiRecommendation" "Updater" "CatchLog" "MIUIBrowser" "MIUIMusicT" "MIUIVideo" "MiGameCenterSDKService" "VoiceTrigger" "MIUIQuickSearchBox" "MIUIMiDrive" "MIUIDuokanReader" "MIUIHuanji" "MIUIGameCenter" "Health" "MIGalleryLockscreen-MIUI15" "MIMediaEditor" "MIUICalculator" "MIUICleanMaster" "MIUICompass" "MIUIEmail" "MIUINewHome_Removable" "MIUINotes" "MIUIScreenRecorderLite" "MIUISoundRecorderTargetSdk30" "MIUIVipAccount" "MIUIVirtualSim" "MIUIXiaoAiSpeechEngine" "MIUIYoupin" "MiRadio" "MiShop" "MiuiScanner" "SmartHome" "ThirdAppAssistant" "XMRemoteController" "wps-lite")
+  unwanted_files=("MIUIPersonalAssistantPhoneMIUI15" "AnalyticsCore" "GooglePlayServicesUpdater" "PaymentService" "MIpay" "XiaoaiEdgeEngine" "MIUIAiasstService" "MIUIGuardProvider" "MINextpay" "MiGameService_MTK" "AiAsstVision" "CarWith" "MIUISuperMarket" "MIUIgreenguard" "VoiceAssistAndroidT" "XiaoaiRecommendation" "Updater" "CatchLog" "MIUIBrowser" "MIUIMusicT" "MIUIVideo" "MiGameCenterSDKService" "VoiceTrigger" "MIUIQuickSearchBox" "MIUIMiDrive" "MIUIDuokanReader" "MIUIHuanji" "MIUIGameCenter" "Health" "MIGalleryLockscreen-MIUI15" "MIMediaEditor" "MIUICalculator" "MIUICompass" "MIUIEmail" "MIUINotes" "MIUIScreenRecorderLite" "MIUISoundRecorderTargetSdk30" "MIUIVipAccount" "MIUIVirtualSim" "MIUIXiaoAiSpeechEngine" "MIUIYoupin" "MiRadio" "MiShop" "MiuiScanner" "SmartHome" "ThirdAppAssistant" "XMRemoteController" "wps-lite")
 else
   unwanted_files=("Drive" "GlobalWPSLITE" "MIDrop" "MIMediaEditorGlobal" "MISTORE_OVERSEA" "MIUICalculatorGlobal" "MIUICompassGlobal" "MIUINotes" "MIUIScreenRecorderLiteGlobal" "MIUISoundRecorderTargetSdk30Global" "MIUIWeatherGlobal" "Meet" "MiCare" "MiGalleryLockScreenGlobal" "MicrosoftOneDrive" "MiuiScanner" "Opera" "Photos" "SmartHome" "Videos" "XMRemoteController" "YTMusic" "Gmail2" "MIRadioGlobal" "MIUIHealthGlobal" "MIUIMiPicks" "Maps" "PlayAutoInstallStubApp" "Updater" "YouTube" "AndroidAutoStub" "MIUIMusicGlobal" "Velvet" "")
 fi
 
 dirs=("images/product/app" "images/product/priv-app" "images/product/data-app")
-
+for dir in "${dirs[@]}"; do
+    echo "Searching in directory: $dir"
+    find "$dir" -name "*.apk" | while read -r apk; do
+        PACKAGE_NAME=$(aapt dump badging "$apk" | grep package:\ name | awk -F"'" '{print $2}')
+        echo "Package found: $PACKAGE_NAME in $apk"
+    done
+done
 for dir in "${dirs[@]}"; do
   for file in "${unwanted_files[@]}"; do
     appsuite=$(find "${WORKSPACE}/${DEVICE}/${dir}/" -type d -name "*$file")
@@ -28,11 +34,11 @@ for dir in "${dirs[@]}"; do
   done
 done
 
-#if [ "$REGION" == "CN" ]; then
-#  mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
-#  mv "${WORKSPACE}/Builder/apps/gboard.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/"
-#  mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.google.android.inputmethod.latin.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
-#  echo -e "${GREEN}Gboard added"
+if [ "$REGION" == "CN" ]; then
+  mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
+  mv "${WORKSPACE}/Builder/apps/gboard.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/"
+  mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.google.android.inputmethod.latin.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
+  echo -e "${GREEN}Gboard added"
 #  mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore"
 #  mv "${WORKSPACE}/Builder/apps/playstore.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore/"
 #  echo -e "${GREEN}Playstore Updated"
@@ -56,7 +62,7 @@ done
 #  mv "${WORKSPACE}/Builder/apps/MIUIPersonalAssistant.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/MIUIPersonalAssistant/"
 #  mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.miui.personalassistant.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
 #  echo -e "${GREEN}MIUIPersonalAssistant added"
-#fi
+fi
 
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/data-app/"
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/app/"

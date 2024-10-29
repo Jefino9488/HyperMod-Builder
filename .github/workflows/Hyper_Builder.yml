@@ -87,6 +87,27 @@ jobs:
           yes | $HOME/android-sdk/cmdline-tools/cmdline-tools/bin/sdkmanager "build-tools;34.0.0"
           echo "$HOME/android-sdk/build-tools/34.0.0" >> $GITHUB_PATH
 
+      - name: Check for aapt
+        run: |
+          if ! command -v aapt &> /dev/null; then
+            echo "aapt could not be found, please check the installation of Android SDK build tools."
+            exit 1
+          else
+            echo "aapt is installed at $(command -v aapt)"
+          fi
+
+      - name: Find aapt
+        run: |
+          AAPT_PATH=$(find "$HOME/android-sdk/build-tools/" -name "aapt" -type f | head -n 1)
+          if [ -z "$AAPT_PATH" ]; then
+            echo "aapt not found in build-tools directory."
+            exit 1
+          else
+            echo "Found aapt at: $AAPT_PATH"
+            echo "Adding aapt to PATH"
+            echo "${AAPT_PATH%/*}" >> $GITHUB_PATH
+          fi
+
       - name: Download & Unpack
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/unpack.sh ${{ github.event.inputs.URL }} ${{ env.device }} $GITHUB_WORKSPACE

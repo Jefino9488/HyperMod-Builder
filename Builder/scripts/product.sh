@@ -15,25 +15,25 @@ if [ "$REGION" == "CN" ]; then
 else
   unwanted_files=("Drive" "GlobalWPSLITE" "MIDrop" "MIMediaEditorGlobal" "MISTORE_OVERSEA" "MIUICalculatorGlobal" "MIUICompassGlobal" "MIUINotes" "MIUIScreenRecorderLiteGlobal" "MIUISoundRecorderTargetSdk30Global" "MIUIWeatherGlobal" "Meet" "MiCare" "MiGalleryLockScreenGlobal" "MicrosoftOneDrive" "MiuiScanner" "Opera" "Photos" "SmartHome" "Videos" "XMRemoteController" "YTMusic" "Gmail2" "MIRadioGlobal" "MIUIHealthGlobal" "MIUIMiPicks" "Maps" "PlayAutoInstallStubApp" "Updater" "YouTube" "AndroidAutoStub" "MIUIMusicGlobal" "Velvet" "")
 fi
+
 wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
 mkdir -p "${WORKSPACE}/android-sdk/cmdline-tools"
 unzip -q commandlinetools-linux-9477386_latest.zip -d "${WORKSPACE}/android-sdk/cmdline-tools"
 
-# Install build tools
 yes | "${WORKSPACE}/android-sdk/cmdline-tools/cmdline-tools/bin/sdkmanager" "build-tools;34.0.0"
 
-echo "${WORKSPACE}/android-sdk/build-tools/34.0.0" >> $GITHUB_PATH
+ AAPT_PATH="${WORKSPACE}/android-sdk/build-tools/34.0.0/aapt"
 if ! command -v aapt &> /dev/null; then
     echo "aapt not found, installing..."
-    AAPT_PATH=$(find "${WORKSPACE}/android-sdk/build-tools/" -name "aapt" -type f | head -n 1)
-    if [ -z "$AAPT_PATH" ]; then
-        echo "aapt not found in build-tools directory."
-        exit 1
-    else
+    if [ -f "$AAPT_PATH" ]; then
         echo "Found aapt at: $AAPT_PATH"
         export PATH="$PATH:$(dirname "$AAPT_PATH")"
+    else
+        echo "aapt not found in build-tools directory."
+        exit 1
     fi
 fi
+
 dirs=("images/product/app" "images/product/priv-app" "images/product/data-app")
 for dir in "${dirs[@]}"; do
     echo "Searching in directory: ${WORKSPACE}/${DEVICE}/${dir}"

@@ -18,8 +18,8 @@ fi
 
 dirs=("images/product/app" "images/product/priv-app" "images/product/data-app")
 for dir in "${dirs[@]}"; do
-    echo "Searching in directory: $dir"
-    find "$dir" -name "*.apk" | while read -r apk; do
+    echo "Searching in directory: ${WORKSPACE}/${DEVICE}/${dir}"
+    find "${WORKSPACE}/${DEVICE}/${dir}/" -type f -name "*.apk" | while read -r apk; do
         PACKAGE_NAME=$(aapt dump badging "$apk" | grep package:\ name | awk -F"'" '{print $2}')
         echo "Package found: $PACKAGE_NAME in $apk"
     done

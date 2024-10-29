@@ -17,7 +17,7 @@ else
 fi
 wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
 mkdir -p "${WORKSPACE}/android-sdk/cmdline-tools"
-unzip -q commandlinetools-linux-9477386_latest.zip -d "${GITHUB_WORKSPACE}/android-sdk/cmdline-tools"
+unzip -q commandlinetools-linux-9477386_latest.zip -d "${WORKSPACE}/android-sdk/cmdline-tools"
 
 # Install build tools
 yes | "${WORKSPACE}/android-sdk/cmdline-tools/cmdline-tools/bin/sdkmanager" "build-tools;34.0.0"

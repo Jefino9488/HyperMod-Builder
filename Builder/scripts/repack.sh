@@ -144,6 +144,7 @@ mkdir -p "${WORKSPACE}/zip/images"
 touch "${WORKSPACE}/zip/compatible_list.txt"
 
 echo "${DEVICE,,}" >> "${WORKSPACE}/zip/compatible_list.txt"
+echo "${DEVICE,,}in" >> "${WORKSPACE}/zip/compatible_list.txt"
 
 cp "${WORKSPACE}/${DEVICE}/images"/* "${WORKSPACE}/zip/images/"
 

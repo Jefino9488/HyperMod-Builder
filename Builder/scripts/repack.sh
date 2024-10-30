@@ -26,6 +26,7 @@ fi
 touch "${WORKSPACE}/compatible_list.txt"
 for DEVICE in "$WORKSPACE/${DEVICE}/images/product/etc/device_features/"*.xml; do
     echo $(basename "${DEVICE}" .xml) >> "${WORKSPACE}/compatible_list.txt"
+    unset DEVICE
 done
 
 if [[ "$EXT4" == true ]]; then
@@ -87,10 +88,11 @@ else
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done
 fi
-for IMAGE in ${super_partition}; do
-    if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
-        eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
+for pname in ${super_partition}; do
+    if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
+        eval "${pname}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$pname.img\" | awk '{print \$1}')"
     fi
+    unset pname
 done
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
@@ -98,6 +100,7 @@ echo -e "${GREEN}- All partitions repacked"
 total_size=0
 for pname in ${super_partition}; do
     total_size=$(( total_size + ${pname}_size ))
+    unset pname
 done
 total_size=$(( total_size + 524288 ))
 block_size=4096
@@ -113,6 +116,7 @@ for pname in ${super_partition}; do
         echo -e "${GREEN}Super sub-partition [$pname] size: [$subsize]"
         lpargs="$lpargs --partition ${pname}_a:readonly:${subsize}:${group_name}_a --image ${pname}_a=${WORKSPACE}/${DEVICE}/images/${pname}.img --partition ${pname}_b:readonly:0:${group_name}_b"
     fi
+    unset pname
 done
 "${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/${DEVICE}/images/super.img" || exit
 
@@ -120,6 +124,7 @@ for pname in ${super_partition}; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
         rm -rf "${WORKSPACE}/${DEVICE}/images/${pname}.img"
     fi
+    unset pname
 done
 
 echo -e "${YELLOW}- Downloading and preparing ${DEVICE} fastboot working directory"

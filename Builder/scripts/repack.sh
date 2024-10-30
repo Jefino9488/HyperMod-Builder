@@ -91,28 +91,23 @@ else
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done
 fi
-for pname in ${super_partition}; do
-    if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
-        eval "${pname}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$pname.img\" | awk '{print \$1}')"
+for IMAGE in vendor product system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
+    if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
+        eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
     fi
-    unset pname
 done
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
 
-total_size=0
-for pname in ${super_partition}; do
-    total_size=$(( total_size + ${pname}_size ))
-    unset pname
-done
-total_size=$(( total_size + 524288 ))
+total_size=$(( ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
 block_size=4096
+total_size=$(( total_size + 524288 ))
 if (( total_size % block_size != 0 )); then
     total_size=$(( total_size + block_size - (total_size % block_size) ))
 fi
 
 lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device-size auto --group ${group_name}_a:${total_size} --group ${group_name}_b:${total_size}"
-for pname in ${super_partition}; do
+for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
         eval subsize="\$${pname}_size"
         echo -e "${GREEN}Super sub-partition [$pname] size: [$subsize]"
@@ -122,7 +117,7 @@ for pname in ${super_partition}; do
 done
 "${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/${DEVICE}/images/super.img" || exit
 
-for pname in ${super_partition}; do
+for pname in system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
         rm -rf "${WORKSPACE}/${DEVICE}/images/${pname}.img"
     fi

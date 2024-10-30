@@ -7,7 +7,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
 
-chmod 644 "${WORKSPACE}/apps/"*
 wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
 mkdir -p "${WORKSPACE}/android-sdk/cmdline-tools"
 unzip -q commandlinetools-linux-9477386_latest.zip -d "${WORKSPACE}/android-sdk/cmdline-tools"
@@ -56,9 +55,6 @@ if [ "$REGION" == "CN" ]; then
     mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
     mv "${WORKSPACE}/Builder/apps/gboard.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/"
     mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.google.android.inputmethod.latin.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
-    chmod 644 "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/gboard.apk"
-    chmod 644 "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/privapp_whitelist_com.google.android.inputmethod.latin.xml"
-    chmod 755 "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
     echo -e "${GREEN}Gboard APK added successfully.${NC}"
   else
     echo -e "${RED}Gboard APK not found in Builder/apps directory.${NC}"
@@ -112,15 +108,27 @@ for dir in "${dirs[@]}"; do
             ORIGINAL_NAME="$(basename "$TARGET_DIR")"
 
             if [[ -f "$REPLACEMENT_APK" ]]; then
-                echo -e "${YELLOW}Replacing $apk with $REPLACEMENT_APK and renaming to $ORIGINAL_NAME.apk${NC}"
-                cp "$REPLACEMENT_APK" "${TARGET_DIR}/${ORIGINAL_NAME}.apk"
-                echo -e "${GREEN}Successfully replaced and renamed to: ${TARGET_DIR}/${ORIGINAL_NAME}.apk${NC}"
+                FILE_SIZE=$(stat -c%s "$REPLACEMENT_APK")
+
+                if (( FILE_SIZE > 1048576 )); then
+                    echo -e "${YELLOW}Replacement APK path: $REPLACEMENT_APK (Size: $((FILE_SIZE / 1024)) KB)${NC}"
+                    echo -e "${YELLOW}Replacing $apk with $REPLACEMENT_APK and renaming to $ORIGINAL_NAME.apk${NC}"
+
+                    if cp "$REPLACEMENT_APK" "${TARGET_DIR}/${ORIGINAL_NAME}.apk"; then
+                        echo -e "${GREEN}Successfully replaced and renamed to: ${TARGET_DIR}/${ORIGINAL_NAME}.apk${NC}"
+                    else
+                        echo -e "${RED}Failed to copy $REPLACEMENT_APK to ${TARGET_DIR}/${ORIGINAL_NAME}.apk${NC}"
+                    fi
+                else
+                    echo -e "${RED}Replacement APK $REPLACEMENT_APK is less than 1 MB (Size: $((FILE_SIZE / 1024)) KB), skipping...${NC}"
+                fi
             else
                 echo -e "${RED}Replacement APK not found for $PACKAGE_NAME, skipping...${NC}"
             fi
         fi
     done
 done
+
 
 
 

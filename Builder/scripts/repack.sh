@@ -29,6 +29,8 @@ for device_code in "$WORKSPACE/${DEVICE}/images/product/etc/device_features/"*.x
     echo $(basename "${device_code}" .xml) >> "${WORKSPACE}/compatible_list.txt"
     unset device_code
 done
+echo -e "${GREEN}- List of compatible devices: "
+cat "${WORKSPACE}/zip/compatible_list.txt"
 
 if [[ "$EXT4" == true ]]; then
     img_free() {
@@ -158,8 +160,6 @@ mkdir -p "${WORKSPACE}/zip/images"
 mv "${WORKSPACE}/compatible_list.txt" "${WORKSPACE}/zip/compatible_list.txt"
 
 cp "${WORKSPACE}/${DEVICE}/images"/* "${WORKSPACE}/zip/images/"
-
-cat "${WORKSPACE}/zip/compatible_list.txt"
 
 cd "${WORKSPACE}/zip" || exit
 

@@ -81,7 +81,6 @@ if [ "$REGION" == "CN" ]; then
 fi
 
 unwanted_apps=("cn.wps.moffice_eng.xiaomi.lite" "com.mfashiongallery.emag" "com.miui.huanji" "com.miui.weather2" "com.miui.thirdappassistant" "com.android.email" "com.android.soundrecorder" "com.mi.health" "com.baidu.input_mi" "com.duokan.phone.remotecontroller" "com.xiaomi.vipaccount" "com.miui.virtualsim" "com.xiaomi.mibrain.speech" "com.miui.fm" "com.xiaomi.youpin" "com.miui.newhome" "com.xiaomi.gamecenter" "com.miui.newmidrive" "com.miui.notes" "com.xiaomi.scanner" "com.xiaomi.smarthome" "com.miui.screenrecorder" "com.miui.mediaeditor" "com.miui.compass" "com.miui.cleanmaster" "com.iflytek.inputmethod.miui" "com.xiaomi.shop" "com.duokan.reader" "com.miui.calculator" "com.miui.player" "com.android.browser" "com.miui.yellowpage" "com.android.quicksearchbox" "com.miui.voicetrigger" "com.miui.video" "com.xiaomi.gamecenter.sdk.service" "com.mipay.wallet" "com.xiaomi.aiasst.vision" "com.miui.greenguard" "com.xiaomi.migameservice" "com.xiaomi.payment" "com.xiaomi.aiasst.service" "com.xiaomi.market" "com.unionpay.tsmservice.mi" "com.miui.carlink" "com.miui.nextpay")
-replace_apps=("com.miui.home" "com.miui.securitycenter" "com.miui.packageinstaller" "com.android.vending" "com.google.android.gms")
 
 dirs=("images/product/app" "images/product/priv-app" "images/product/data-app")
 REPLACEMENT_DIR="${WORKSPACE}/Builder/apps"
@@ -106,25 +105,23 @@ for dir in "${dirs[@]}"; do
             continue
         fi
 
-        is_replaceable=false
-        for replaceable in "${replace_apps[@]}"; do
-            if [[ "$PACKAGE_NAME" == "$replaceable" ]]; then
-                is_replaceable=true
+        REPLACEMENT_APK=$(find "${REPLACEMENT_DIR}" -type f -name "*.apk" | while read -r replacement_apk; do
+            REPLACEMENT_PACKAGE_NAME=$(aapt dump badging "$replacement_apk" | grep package:\ name | awk -F"'" '{print $2}')
+            if [[ "$REPLACEMENT_PACKAGE_NAME" == "$PACKAGE_NAME" ]]; then
+                echo "$replacement_apk"
                 break
             fi
-        done
+        done)
 
-        if [[ "$is_replaceable" == true ]]; then
-            REPLACEMENT_APK="${REPLACEMENT_DIR}/$(basename "$PACKAGE_NAME").apk"
-            if [[ -f "$REPLACEMENT_APK" ]]; then
-                echo "Replacing $apk with $REPLACEMENT_APK"
-                cp "$REPLACEMENT_APK" "$apk"
-            else
-                echo "Replacement APK not found for $PACKAGE_NAME, skipping..."
-            fi
+        if [[ -n "$REPLACEMENT_APK" ]]; then
+            echo "Replacing $apk with $REPLACEMENT_APK"
+            cp "$REPLACEMENT_APK" "$apk"
+        else
+            echo "Replacement APK not found for $PACKAGE_NAME, skipping..."
         fi
     done
 done
+
 
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/data-app/"
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/app/"

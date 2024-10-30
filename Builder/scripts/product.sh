@@ -115,7 +115,9 @@ for dir in "${dirs[@]}"; do
         done
 
         if [[ "$is_replaceable" == true ]]; then
-            REPLACEMENT_APK="${REPLACEMENT_DIR}/$(basename "$PACKAGE_NAME").apk"
+            ORIGINAL_BASENAME=$(basename "$apk")
+            REPLACEMENT_APK="${REPLACEMENT_DIR}/${ORIGINAL_BASENAME}"
+
             if [[ -f "$REPLACEMENT_APK" ]]; then
                 echo "Replacing $apk with $REPLACEMENT_APK"
                 cp "$REPLACEMENT_APK" "$apk"
@@ -125,6 +127,7 @@ for dir in "${dirs[@]}"; do
         fi
     done
 done
+
 
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/data-app/"
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/app/"

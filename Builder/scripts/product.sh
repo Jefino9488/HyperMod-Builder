@@ -7,6 +7,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[1;34m'
 GREEN='\033[1;32m'
 
+chmod 644 "${WORKSPACE}/apps/"*
 wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
 mkdir -p "${WORKSPACE}/android-sdk/cmdline-tools"
 unzip -q commandlinetools-linux-9477386_latest.zip -d "${WORKSPACE}/android-sdk/cmdline-tools"
@@ -51,10 +52,16 @@ echo -e "${YELLOW}- modifying product"
 #done
 #
 if [ "$REGION" == "CN" ]; then
-  mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
-  mv "${WORKSPACE}/Builder/apps/gboard.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/"
-  mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.google.android.inputmethod.latin.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
-  echo -e "${GREEN}Gboard added"
+  if [[ -f "${WORKSPACE}/Builder/apps/gboard.apk" ]]; then
+    mv "${WORKSPACE}/Builder/apps/gboard.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/"
+    mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.google.android.inputmethod.latin.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
+    chmod 644 "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/gboard.apk"
+    chmod 644 "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/privapp_whitelist_com.google.android.inputmethod.latin.xml"
+    chmod 755 "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
+    echo -e "${GREEN}Gboard APK added successfully.${NC}"
+  else
+    echo -e "${RED}Gboard APK not found in Builder/apps directory.${NC}"
+  fi
 #  mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore"
 #  mv "${WORKSPACE}/Builder/apps/playstore.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/GooglePlayStore/"
 #  echo -e "${GREEN}Playstore Updated"

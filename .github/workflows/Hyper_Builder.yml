@@ -77,6 +77,12 @@ jobs:
           cd smali
           ./gradlew build
 
+      - name: Install Git LFS
+        run: |
+          git lfs install
+          git lfs fetch
+          git lfs checkout
+
       - name: Download & Unpack
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/unpack.sh ${{ github.event.inputs.URL }} ${{ env.device }} $GITHUB_WORKSPACE

@@ -14,12 +14,13 @@ chmod +x "${WORKSPACE}/tools/e2fsdroid"
 file "${WORKSPACE}/tools/e2fsdroid"
 echo -e "${YELLOW}- Repacking images"
 
-super_partition=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' "$WORKSPACE/${DEVICE}/images/vendor/etc/fstab.qcom" | awk '{print $1}' | sort | uniq )
 if grep -q "ro.product.product.manufacturer=QUALCOMM" "$WORKSPACE/${DEVICE}/images/product/etc/build.prop"; then
     group_name="qti_dynamic_partitions"
+    super_partition=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' "$WORKSPACE/${DEVICE}/images/vendor/etc/fstab.qcom" | awk '{print $1}' | sort | uniq )
     echo -e "${GREEN}- The device is manufactured by QUALCOMM"
 else
     group_name="main"
+    super_partition=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' "$WORKSPACE/${DEVICE}/images/vendor/etc/fstab.emmc" | awk '{print $1}' | sort | uniq )
     echo -e "${GREEN}- The device is manufactured by MEDIATEK"
 fi
 

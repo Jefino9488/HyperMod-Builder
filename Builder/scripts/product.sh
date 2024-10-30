@@ -53,6 +53,7 @@ echo -e "${YELLOW}- modifying product"
 #
 if [ "$REGION" == "CN" ]; then
   if [[ -f "${WORKSPACE}/Builder/apps/gboard.apk" ]]; then
+    mkdir -p "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard"
     mv "${WORKSPACE}/Builder/apps/gboard.apk" "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/"
     mv "${WORKSPACE}/Builder/permisions/privapp_whitelist_com.google.android.inputmethod.latin.xml" "${WORKSPACE}/${DEVICE}/images/product/etc/permissions/"
     chmod 644 "${WORKSPACE}/${DEVICE}/images/product/priv-app/Gboard/gboard.apk"
@@ -134,9 +135,6 @@ for dir in "${dirs[@]}"; do
         fi
     done
 done
-
-
-
 
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/data-app/"
 ls -alh "${WORKSPACE}/${DEVICE}/images/product/app/"

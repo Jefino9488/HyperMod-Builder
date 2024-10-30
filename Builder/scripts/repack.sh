@@ -30,7 +30,7 @@ for device_code in "$WORKSPACE/${DEVICE}/images/product/etc/device_features/"*.x
     unset device_code
 done
 echo -e "${GREEN}- List of compatible devices: "
-cat "${WORKSPACE}/zip/compatible_list.txt"
+cat "${WORKSPACE}/compatible_list.txt"
 
 if [[ "$EXT4" == true ]]; then
     img_free() {

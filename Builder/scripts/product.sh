@@ -87,10 +87,10 @@ dirs=("images/product/app" "images/product/priv-app" "images/product/data-app")
 REPLACEMENT_DIR="${WORKSPACE}/Builder/apps"
 
 for dir in "${dirs[@]}"; do
-    echo "Searching in directory: ${WORKSPACE}/${DEVICE}/${dir}"
+    echo -e "${BLUE}Searching in directory: ${WORKSPACE}/${DEVICE}/${dir}${NC}"
     find "${WORKSPACE}/${DEVICE}/${dir}/" -type f -name "*.apk" | while read -r apk; do
         PACKAGE_NAME=$(aapt dump badging "$apk" | grep package:\ name | awk -F"'" '{print $2}')
-        echo "Package found: $PACKAGE_NAME in $apk"
+        echo -e "${GREEN}Package found: $PACKAGE_NAME in $apk${NC}"
 
         is_unwanted=false
         for unwanted in "${unwanted_apps[@]}"; do
@@ -101,7 +101,7 @@ for dir in "${dirs[@]}"; do
         done
 
         if [[ "$is_unwanted" == true ]]; then
-            echo "Deleting unwanted app $PACKAGE_NAME and its directory: $apk"
+            echo -e "${RED}Deleting unwanted app $PACKAGE_NAME and its directory: $apk${NC}"
             rm -rf "$(dirname "$apk")"
             continue
         fi
@@ -117,15 +117,17 @@ for dir in "${dirs[@]}"; do
         if [[ "$is_replaceable" == true ]]; then
             REPLACEMENT_APK="${REPLACEMENT_DIR}/${PACKAGE_NAME}.apk"
             if [[ -f "$REPLACEMENT_APK" ]]; then
-                echo "Replacing $apk with $REPLACEMENT_APK"
+                echo -e "${YELLOW}Replacing $apk with $REPLACEMENT_APK${NC}"
                 cp "$REPLACEMENT_APK" "$apk"
                 mv "$apk" "$(dirname "$apk")/$(basename "$apk")"
+                echo -e "${GREEN}Successfully replaced and renamed to: $(basename "$apk")${NC}"
             else
-                echo "Replacement APK not found for $PACKAGE_NAME, skipping..."
+                echo -e "${RED}Replacement APK not found for $PACKAGE_NAME, skipping...${NC}"
             fi
         fi
     done
 done
+
 
 
 

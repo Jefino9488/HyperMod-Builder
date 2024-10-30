@@ -24,9 +24,9 @@ else
 fi
 
 touch "${WORKSPACE}/compatible_list.txt"
-for DEVICE in "$WORKSPACE/${DEVICE}/images/product/etc/device_features/"*.xml; do
-    echo $(basename "${DEVICE}" .xml) >> "${WORKSPACE}/compatible_list.txt"
-    unset DEVICE
+for device_code in "$WORKSPACE/${DEVICE}/images/product/etc/device_features/"*.xml; do
+    echo $(basename "${device_code}" .xml) >> "${WORKSPACE}/compatible_list.txt"
+    unset device_code
 done
 
 if [[ "$EXT4" == true ]]; then

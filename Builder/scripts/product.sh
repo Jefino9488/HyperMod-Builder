@@ -57,8 +57,20 @@ for dir in "${dirs[@]}"; do
 
         if [[ ${replace_apps[*]} =~ ${PACKAGE_NAME} ]]; then
             REPLACEMENT_APK="${REPLACEMENT_DIR}/${PACKAGE_NAME}.apk"
+            REPLACEMENT_ZIP="${REPLACEMENT_DIR}/${PACKAGE_NAME}.zip"
             TARGET_DIR="$(dirname "$apk")"
             ORIGINAL_NAME="$(basename "$TARGET_DIR")"
+
+            if [[ -f "$REPLACEMENT_ZIP" ]]; then
+                unzip -j "$REPLACEMENT_ZIP" "${PACKAGE_NAME}.apk" -d "$TARGET_DIR" 2>/dev/null
+
+                if [[ -f "${TARGET_DIR}/${PACKAGE_NAME}.apk" ]]; then
+                    REPLACEMENT_APK="${TARGET_DIR}/${PACKAGE_NAME}.apk"
+                else
+                    echo -e "${RED}No ${PACKAGE_NAME}.apk found inside $REPLACEMENT_ZIP, skipping...${NC}"
+                    continue
+                fi
+            fi
 
             if [[ -f "$REPLACEMENT_APK" ]]; then
                 FILE_SIZE=$(stat -c%s "$REPLACEMENT_APK")
@@ -67,10 +79,10 @@ for dir in "${dirs[@]}"; do
                     echo -e "${YELLOW}Replacement APK path: $REPLACEMENT_APK (Size: $((FILE_SIZE / 1024)) KB)${NC}"
                     echo -e "${YELLOW}Replacing $apk with $REPLACEMENT_APK and renaming to $ORIGINAL_NAME.apk${NC}"
 
-                    if cp "$REPLACEMENT_APK" "${TARGET_DIR}/${ORIGINAL_NAME}.apk"; then
+                    if mv "$REPLACEMENT_APK" "${TARGET_DIR}/${ORIGINAL_NAME}.apk"; then
                         echo -e "${GREEN}Successfully replaced and renamed to: ${TARGET_DIR}/${ORIGINAL_NAME}.apk${NC}"
                     else
-                        echo -e "${RED}Failed to copy $REPLACEMENT_APK to ${TARGET_DIR}/${ORIGINAL_NAME}.apk${NC}"
+                        echo -e "${RED}Failed to rename $REPLACEMENT_APK to ${TARGET_DIR}/${ORIGINAL_NAME}.apk${NC}"
                     fi
                 else
                     echo -e "${RED}Replacement APK $REPLACEMENT_APK is less than 1 MB (Size: $((FILE_SIZE / 1024)) KB), skipping...${NC}"
@@ -81,6 +93,7 @@ for dir in "${dirs[@]}"; do
         fi
     done
 done
+
 
 
 

@@ -68,14 +68,14 @@ jobs:
           sudo apt update
           sudo apt-get install python3 aria2 p7zip-full zstd dos2unix e2fsprogs android-sdk-libsparse-utils
 
-      - name: Clone smali repository
-        run: git clone --depth=1 https://github.com/JesusFreke/smali.git
+      # - name: Clone smali repository
+      #   run: git clone --depth=1 https://github.com/JesusFreke/smali.git
 
-      - name: Build smali and baksmali
-        run: |
-          ls
-          cd smali
-          ./gradlew build
+      # - name: Build smali and baksmali
+      #   run: |
+      #     ls
+      #     cd smali
+      #     ./gradlew build
 
       - name: Download & Unpack
         run: |
@@ -89,17 +89,17 @@ jobs:
 #        run: |
 #          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system.sh ${{ env.device }} $GITHUB_WORKSPACE
 
-      - name: Modify System_ext
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system_ext.sh ${{ env.device }} $GITHUB_WORKSPACE
+      # - name: Modify System_ext
+      #   run: |
+      #     sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/system_ext.sh ${{ env.device }} $GITHUB_WORKSPACE
 
       - name: Modify Vendor
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/vendor.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.ext4 }}
 
-      - name: Patch Framework
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
+      # - name: Patch Framework
+      #   run: |
+      #     sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/patch.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.core }}
 
       - name: Patch Boot
         run: |

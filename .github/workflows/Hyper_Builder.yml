@@ -81,9 +81,9 @@ jobs:
         run: |
           sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/unpack.sh ${{ github.event.inputs.URL }} ${{ env.device }} $GITHUB_WORKSPACE
 
-      - name: Modify Product
-        run: |
-          sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/product.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.region }}
+      # - name: Modify Product
+      #   run: |
+      #     sudo bash "$GITHUB_WORKSPACE"/Builder/scripts/product.sh ${{ env.device }} $GITHUB_WORKSPACE ${{ github.event.inputs.region }}
 
 #      - name: Modify System
 #        run: |

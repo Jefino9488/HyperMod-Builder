@@ -1,4 +1,3 @@
-#!/bin/bash
 
 DEVICE="$1"
 WORKSPACE="$2"
@@ -25,43 +24,31 @@ else
 fi
 
 super_partition=$(grep -E "^\w+" "$fstab_file" | awk '{print $1}' | sort -u)
+super_partition=$(echo "$super_partition" | grep -v '^overlay$')
 
 echo "Detected partitions:"
 echo "$super_partition"
 
 touch "${WORKSPACE}/compatible_list.txt"
 for device_code in "$WORKSPACE/${DEVICE}/images/product/etc/device_features/"*.xml; do
-    echo $(basename "${device_code}" .xml) >> "${WORKSPACE}/compatible_list.txt"
-    unset device_code
+    echo "$(basename "${device_code}" .xml)" >> "${WORKSPACE}/compatible_list.txt"
 done
-echo -e "${GREEN}- List of compatible devices: "
+echo -e "${GREEN}- List of compatible devices:"
 cat "${WORKSPACE}/compatible_list.txt"
 
 if [[ "$EXT4" == true ]]; then
     img_free() {
-      size_free="$(tune2fs -l "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '/Free blocks:/ { print $3 }')"
-      size_free="$(echo "$size_free * 4096 / 1024 / 1024" | bc)"
-      if [[ $size_free -ge 1048576 ]]; then
-        File_Type="$(awk "BEGIN{print $size_free/1048576}") GB"
-      elif [[ $size_free -ge 1024 ]]; then
-        File_Type="$(awk "BEGIN{print $size_free/1024}") MB"
-      else
-        File_Type="${size_free} KB"
-      fi
-      echo -e "\e[1;33m - ${i}.img free: $File_Type \e[0m"
+        size_free="$(tune2fs -l "$WORKSPACE/${DEVICE}/images/${i}.img" | awk '/Free blocks:/ { print $3 }')"
+        size_free="$(echo "$size_free * 4096 / 1024 / 1024" | bc)"
+        if [[ $size_free -ge 1048576 ]]; then
+            File_Type="$(awk "BEGIN{print $size_free/1048576}") GB"
+        elif [[ $size_free -ge 1024 ]]; then
+            File_Type="$(awk "BEGIN{print $size_free/1024}") MB"
+        else
+            File_Type="${size_free} KB"
+        fi
+        echo -e "\e[1;33m - ${i}.img free: $File_Type \e[0m"
     }
-
-    for i in product system system_ext vendor; do
-      eval "${i}_size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}" | awk '{print $1}')"
-      if [[ "$(eval echo "\${${i}_size_orig}")" -lt 104857600 ]]; then
-        size=$(echo "$(eval echo "\${${i}_size_orig}") * 15 / 10 / 4096 * 4096" | bc)
-      elif [[ "$(eval echo "\${${i}_size_orig}")" -lt 1073741824 ]]; then
-        size=$(echo "$(eval echo "\${${i}_size_orig}") * 108 / 100 / 4096 * 4096" | bc)
-      else
-        size=$(echo "$(eval echo "\${${i}_size_orig}") * 103 / 100 / 4096 * 4096" | bc)
-      fi
-      eval "${i}_size=$(echo "$size * 4096 / 4096 / 4096" | bc)"
-    done
 
     for i in product system system_ext vendor; do
         if [[ ! -d "$WORKSPACE/${DEVICE}/images/$i" ]]; then
@@ -73,16 +60,12 @@ if [[ "$EXT4" == true ]]; then
         eval "${i}_inode=$(sudo wc -l < "$WORKSPACE/${DEVICE}/images/config/${i}_fs_config")"
         eval "${i}_inode=$(echo "$(eval echo "\${${i}_inode}") + 8" | bc)"
 
-        sudo "$WORKSPACE/tools/mke2fs" -O ^has_journal -L $i -I 256 -N "$(eval echo "\${${i}_inode}")" -M /$i -m 0 -t ext4 -b 4096 "$WORKSPACE/${DEVICE}/images/${i}.img" "$(eval echo "\${${i}_size}")" || false
-        sudo "$WORKSPACE/tools/e2fsdroid" -e -T 1230768000 -C "$WORKSPACE/${DEVICE}/images/config/${i}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${i}_file_contexts" -f "$WORKSPACE/${DEVICE}/images/$i" -a /$i "$WORKSPACE/${DEVICE}/images/$i.img" || false
+        sudo "$WORKSPACE/tools/mke2fs" -O ^has_journal -L $i -I 256 -N "$(eval echo "\${${i}_inode}")" -M /$i -m 0 -t ext4 -b 4096 "$WORKSPACE/${DEVICE}/images/${i}.img" "$(eval echo "\${${i}_size}")"
+        sudo "$WORKSPACE/tools/e2fsdroid" -e -T 1230768000 -C "$WORKSPACE/${DEVICE}/images/config/${i}_fs_config" -S "$WORKSPACE/${DEVICE}/images/config/${i}_file_contexts" -f "$WORKSPACE/${DEVICE}/images/$i" -a /$i "$WORKSPACE/${DEVICE}/images/$i.img"
         resize2fs -f -M "$WORKSPACE/${DEVICE}/images/$i.img"
-        eval "${i}_size=$(du -sb "$WORKSPACE/${DEVICE}/images/$i.img" | awk '{print $1}')"
         img_free
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$i"
     done
-
-    df -h "$WORKSPACE/${DEVICE}/images"
-    ls -l "$WORKSPACE/${DEVICE}/images"
 else
     for partition in product system system_ext vendor; do
         sudo python3 "$WORKSPACE/tools/fspatch.py" "$WORKSPACE/${DEVICE}/images/$partition" "$WORKSPACE/${DEVICE}/images/config/${partition}_fs_config"
@@ -96,19 +79,13 @@ else
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done
 fi
-for IMAGE in ${super_partition}; do
-    if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
-        eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
-    fi
-done
-sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
-echo -e "${GREEN}- All partitions repacked"
 
 total_size=0
+block_size=4096
 for pname in ${super_partition}; do
+    eval "${pname}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$pname.img\" | awk '{print \$1}')"
     total_size=$(( total_size + ${pname}_size ))
-    unset pname
-doneblock_size=4096
+done
 total_size=$(( total_size + 524288 ))
 if (( total_size % block_size != 0 )); then
     total_size=$(( total_size + block_size - (total_size % block_size) ))
@@ -116,14 +93,11 @@ fi
 
 lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device-size auto --group ${group_name}_a:${total_size} --group ${group_name}_b:${total_size}"
 for pname in ${super_partition}; do
-    if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
-        eval subsize="\$${pname}_size"
-        echo -e "${GREEN}Super sub-partition [$pname] size: [$subsize]"
-        lpargs="$lpargs --partition ${pname}_a:readonly:${subsize}:${group_name}_a --image ${pname}_a=${WORKSPACE}/${DEVICE}/images/${pname}.img --partition ${pname}_b:readonly:0:${group_name}_b"
-    fi
-    unset pname
+    eval subsize="\$${pname}_size"
+    lpargs="$lpargs --partition ${pname}_a:readonly:${subsize}:${group_name}_a --image ${pname}_a=${WORKSPACE}/${DEVICE}/images/${pname}.img --partition ${pname}_b:readonly:0:${group_name}_b"
 done
-"${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/${DEVICE}/images/super.img" || exit
+
+"${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/${DEVICE}/images/super.img"
 
 for pname in ${super_partition}; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then

@@ -16,13 +16,18 @@ echo -e "${YELLOW}- Repacking images"
 
 if grep -q "ro.product.product.manufacturer=QUALCOMM" "$WORKSPACE/${DEVICE}/images/product/etc/build.prop"; then
     group_name="qti_dynamic_partitions"
-    super_partition=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' "$WORKSPACE/${DEVICE}/images/vendor/etc/fstab.qcom" | awk '{print $1}' | sort | uniq )
+    fstab_file="$WORKSPACE/${DEVICE}/images/vendor/etc/fstab.qcom"
     echo -e "${GREEN}- The device is manufactured by QUALCOMM"
 else
     group_name="main"
-    super_partition=$(sed '/^#/d;/^\//d;/overlay/d;/^$/d' "$WORKSPACE/${DEVICE}/images/vendor/etc/fstab.emmc" | awk '{print $1}' | sort | uniq )
+    fstab_file="$WORKSPACE/${DEVICE}/images/vendor/etc/fstab.emmc"
     echo -e "${GREEN}- The device is manufactured by MEDIATEK"
 fi
+
+super_partition=$(grep -E "^\w+" "$fstab_file" | awk '{print $1}' | sort -u)
+
+echo "Detected partitions:"
+echo "$super_partition"
 
 touch "${WORKSPACE}/compatible_list.txt"
 for device_code in "$WORKSPACE/${DEVICE}/images/product/etc/device_features/"*.xml; do
@@ -91,7 +96,7 @@ else
         sudo rm -rf "$WORKSPACE/${DEVICE}/images/$partition"
     done
 fi
-for IMAGE in vendor product system_dlkm system system_ext odm_dlkm odm vendor_dlkm mi_ext; do
+for IMAGE in ${super_partition}; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/$IMAGE.img" ]; then
         eval "${IMAGE}_size=\$(du -b \"${WORKSPACE}/${DEVICE}/images/$IMAGE.img\" | awk '{print \$1}')"
     fi
@@ -99,15 +104,18 @@ done
 sudo rm -rf "${WORKSPACE}/${DEVICE}/images/config"
 echo -e "${GREEN}- All partitions repacked"
 
-total_size=$(( ${system_dlkm_size:-0} + ${system_size:-0} + ${system_ext_size:-0} + ${product_size:-0} + ${vendor_size:-0} + ${odm_size:-0} + ${odm_dlkm_size:-0} + ${vendor_dlkm_size:-0} + ${mi_ext_size:-0} ))
-block_size=4096
+total_size=0
+for pname in ${super_partition}; do
+    total_size=$(( total_size + ${pname}_size ))
+    unset pname
+doneblock_size=4096
 total_size=$(( total_size + 524288 ))
 if (( total_size % block_size != 0 )); then
     total_size=$(( total_size + block_size - (total_size % block_size) ))
 fi
 
 lpargs="--metadata-size 65536 --super-name super --block-size $block_size --metadata-slots 3 --device-size auto --group ${group_name}_a:${total_size} --group ${group_name}_b:${total_size}"
-for pname in system_dlkm system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
+for pname in ${super_partition}; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
         eval subsize="\$${pname}_size"
         echo -e "${GREEN}Super sub-partition [$pname] size: [$subsize]"
@@ -117,7 +125,7 @@ for pname in system_dlkm system system_ext product vendor odm_dlkm odm vendor_dl
 done
 "${WORKSPACE}/tools/lpmake" $lpargs --virtual-ab --sparse --output "${WORKSPACE}/${DEVICE}/images/super.img" || exit
 
-for pname in system_dlkm system system_ext product vendor odm_dlkm odm vendor_dlkm mi_ext; do
+for pname in ${super_partition}; do
     if [ -f "${WORKSPACE}/${DEVICE}/images/${pname}.img" ]; then
         rm -rf "${WORKSPACE}/${DEVICE}/images/${pname}.img"
     fi

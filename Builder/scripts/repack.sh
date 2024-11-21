@@ -49,6 +49,17 @@ if [[ "$EXT4" == true ]]; then
         fi
         echo -e "\e[1;33m - ${i}.img free: $File_Type \e[0m"
     }
+    for i in product system system_ext vendor; do
+        eval "${i}_size_orig=$(sudo du -sb "$WORKSPACE/${DEVICE}/images/${i}" | awk '{print $1}')"
+        if [[ "$(eval echo "\${${i}_size_orig}")" -lt 104857600 ]]; then
+            size=$(echo "$(eval echo "\${${i}_size_orig}") * 15 / 10 / 4096 * 4096" | bc)
+        elif [[ "$(eval echo "\${${i}_size_orig}")" -lt 1073741824 ]]; then
+            size=$(echo "$(eval echo "\${${i}_size_orig}") * 108 / 100 / 4096 * 4096" | bc)
+        else
+            size=$(echo "$(eval echo "\${${i}_size_orig}") * 103 / 100 / 4096 * 4096" | bc)
+        fi
+        eval "${i}_size=$(echo "$size * 4096 / 4096 / 4096" | bc)"
+    done
 
     for i in product system system_ext vendor; do
         if [[ ! -d "$WORKSPACE/${DEVICE}/images/$i" ]]; then

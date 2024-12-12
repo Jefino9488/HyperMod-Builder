@@ -38,7 +38,7 @@ if [ "$REGION" == "CN" ]; then
 fi
 
 unwanted_apps=("cn.wps.moffice_eng.xiaomi.lite" "com.mfashiongallery.emag" "com.miui.huanji" "com.miui.thirdappassistant" "com.android.email" "com.android.soundrecorder" "com.mi.health" "com.baidu.input_mi" "com.duokan.phone.remotecontroller" "com.xiaomi.vipaccount" "com.miui.virtualsim" "com.xiaomi.mibrain.speech" "com.xiaomi.youpin" "com.xiaomi.gamecenter" "com.miui.newmidrive" "com.miui.notes" "com.xiaomi.scanner" "com.xiaomi.smarthome" "com.miui.screenrecorder" "com.miui.mediaeditor" "com.miui.compass" "com.iflytek.inputmethod.miui" "com.xiaomi.shop" "com.duokan.reader" "com.miui.calculator" "com.miui.player" "com.android.browser" "com.miui.yellowpage" "com.android.quicksearchbox" "com.miui.voicetrigger" "com.miui.video" "com.xiaomi.gamecenter.sdk.service" "com.xiaomi.aiasst.vision" "com.miui.greenguard" "com.xiaomi.migameservice" "com.xiaomi.payment" "com.xiaomi.aiasst.service" "com.xiaomi.market" "com.unionpay.tsmservice.mi" "com.miui.carlink" "com.miui.voiceassist" "com.sohu.inputmethod.sogou.xiaomi")
-replace_apps=("com.android.vending" "com.google.android.gms")
+replace_apps=("")
 
 dirs=("images/product/app" "images/product/priv-app" "images/product/data-app")
 REPLACEMENT_DIR="${WORKSPACE}/Builder/apps"
